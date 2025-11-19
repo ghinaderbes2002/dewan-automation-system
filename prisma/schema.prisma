@@ -1,0 +1,463 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeRole {
+  ADMIN
+  ISSUING                 // موظف صادر ووارد
+  AUDITOR                  // موظف تدقيق
+  MEMBERSHIP_AND_SERVICE  // دمج طلب الانتساب وضم الخدمة بدور واحد
+}
+
+
+/* ---------------------------------------------------
+   1. engineers
+--------------------------------------------------- */
+model engineers {
+  id                   BigInt   @id @default(autoincrement())
+  full_name_ar         String
+  full_name_en         String?
+  national_id_number   String?
+  nationality          String?
+  birth_date           DateTime?
+  birth_place          String?
+  civil_registry_office String?
+  phone                String?
+  mobile               String?
+  email                String?
+  address              String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @default(now())
+
+  engineering_offices engineering_offices[]
+  membership_requests membership_requests[]
+  training_requests   training_requests[]
+  office_opening_requests office_opening_requests[]
+  promotion_requests  promotion_requests[]
+}
+
+
+/* ---------------------------------------------------
+   3. diwan_employees
+--------------------------------------------------- */
+model diwan_employees {
+  id           Int    @id @default(autoincrement())
+  full_name    String
+  job_role     EmployeeRole
+  username     String? @unique
+  password_hash String?
+  is_active    Boolean @default(true)
+
+  attachments                 attachments[]
+  membership_requests_received membership_requests[] @relation("ReceivedBy")
+  membership_requests_study    membership_requests[] @relation("StudyBy")
+  membership_documents          membership_documents[]
+  membership_fees              membership_fees[]
+}
+
+/* ---------------------------------------------------
+   4. registry_entries
+--------------------------------------------------- */
+model registry_entries {
+  id          BigInt  @id @default(autoincrement())
+  registry_no String
+  direction   String
+  date        DateTime
+  from_entity String?
+  to_entity   String?
+  subject     String?
+
+  request_type String?
+  request_id   BigInt?
+  notes        String?
+}
+
+/* ---------------------------------------------------
+   5. attachments
+--------------------------------------------------- */
+model attachments {
+  id               BigInt  @id @default(autoincrement())
+  request_type     String
+  request_id       BigInt
+  document_type    String?
+  file_path        String
+  uploaded_at      DateTime @default(now())
+  uploaded_by_employee_id Int?
+
+  diwan_employees diwan_employees? @relation(fields: [uploaded_by_employee_id], references: [id])
+  office_division_links office_division_links[]
+}
+
+/* ---------------------------------------------------
+   6. office_division_links
+--------------------------------------------------- */
+model office_division_links {
+  id          BigInt @id @default(autoincrement())
+  request_type String
+  request_id   BigInt
+
+  sent_to_office_at      DateTime?
+  office_reply_date      DateTime?
+  office_decision_no     String?
+  office_decision_file_id BigInt?
+
+  notes        String?
+
+  attachments attachments? @relation(fields: [office_decision_file_id], references: [id])
+}
+
+/* ---------------------------------------------------
+   7. engineering_offices
+--------------------------------------------------- */
+model engineering_offices {
+  id                BigInt   @id @default(autoincrement())
+  office_name       String
+  owner_engineer_id BigInt?
+
+  office_type       String?
+  specialization    String?
+  address           String?
+  phone             String?
+  license_no        String?
+  license_issue_date DateTime?
+  license_status    String? @default("active")
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  engineers engineers? @relation(fields: [owner_engineer_id], references: [id])
+
+
+  training_requests training_requests[]
+  office_opening_requests office_opening_requests[]
+}
+
+/* ---------------------------------------------------
+   8. membership_requests
+--------------------------------------------------- */
+model membership_requests {
+  id             BigInt   @id @default(autoincrement())
+  request_scope  String
+  inbound_number String?
+  inbound_date   DateTime?
+  engineer_id    BigInt?
+
+  full_name_ar   String
+  first_name_en  String?
+  last_name_en   String?
+  father_name    String?
+  mother_name    String?
+  national_id_number String?
+  civil_registry_office String?
+  birth_place    String?
+  birth_date     DateTime?
+  nationality    String?
+
+  university_name String?
+  faculty_name    String?
+  degree_title    String?
+  engineering_department String?
+  specialization  String?
+  academic_year   String?
+  exam_session    String?
+  university_record_no String?
+  university_council_decision_no String?
+  university_council_decision_date DateTime?
+
+  is_resident_abroad Boolean @default(false)
+  country           String? @default("سوريا")
+  home_address      String?
+  work_address      String?
+  phone             String?
+  mobile            String?
+  email             String?
+
+  laws_acknowledged  Boolean @default(false)
+  correspondence_address String?
+  applicant_signature String?
+  application_date   DateTime?
+
+  study_engineer_status        String?
+  study_engineering_department String?
+  study_specialization         String?
+  study_reference              String?
+  study_notes                  String?
+  study_date                   DateTime?
+  study_employee_id            Int?
+
+  branch_decision_number         String?
+  branch_decision_date           DateTime?
+  branch_decision_department     String?
+  branch_decision_specialization String?
+  oath_invitation_date           DateTime?
+  oath_day                       String?
+  oath_date                      DateTime?
+  oath_time                      DateTime?
+  syndicate_registration_number  String?
+
+  status String? @default("draft")
+  received_by_employee_id Int?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  engineers engineers? @relation(fields: [engineer_id], references: [id])
+
+  received_by diwan_employees? @relation("ReceivedBy", fields: [received_by_employee_id], references: [id])
+  studied_by  diwan_employees? @relation("StudyBy", fields: [study_employee_id], references: [id])
+
+  membership_documents membership_documents[]
+  membership_fees      membership_fees[]
+  death_aid_forms      death_aid_forms[]
+}
+
+/* ---------------------------------------------------
+   9. death_aid_forms
+--------------------------------------------------- */
+model death_aid_forms {
+  id BigInt @id @default(autoincrement())
+  membership_request_id BigInt
+
+  beneficiary1_name          String?
+  beneficiary1_relation      String?
+  beneficiary1_share_percent Decimal?
+  beneficiary2_name          String?
+  beneficiary2_relation      String?
+  beneficiary2_share_percent Decimal?
+  beneficiary3_name          String?
+  beneficiary3_relation      String?
+  beneficiary3_share_percent Decimal?
+
+  option_a_enabled       Boolean?
+  option_b_enabled       Boolean?
+  pay_to_heirs_as_sharia Boolean?
+
+  other_beneficiary1_name          String?
+  other_beneficiary1_relation      String?
+  other_beneficiary1_share_percent Decimal?
+
+  notes               String?
+  id_card_number      String?
+  id_card_issued_from String?
+  id_card_issue_date  DateTime?
+  form_diwane_number  String?
+  form_diwane_date    DateTime?
+  engineer_signature  String?
+  branch_chair_signature String?
+
+  membership_requests membership_requests @relation(fields: [membership_request_id], references: [id], onDelete: Cascade)
+}
+
+/* ---------------------------------------------------
+   10. membership_documents
+--------------------------------------------------- */
+model membership_documents {
+  id BigInt @id @default(autoincrement())
+  membership_request_id BigInt
+
+  doc_civil_registry_or_id_copy        Boolean?
+  doc_civil_registry_extract_copy      Boolean?
+  doc_engineering_degree_certified     Boolean?
+  doc_degree_translation               Boolean?
+  doc_scientific_baccalaureate         Boolean?
+  doc_engineering_qualification_committee Boolean?
+  doc_photos_4x3                       Boolean?
+  doc_photos_3x2                       Boolean?
+  doc_work_permit_non_syrian           Boolean?
+  doc_residence_statement_non_employee Boolean?
+  doc_fees_paid_confirmation           Boolean?
+
+  checked_by_employee_id Int?
+  checked_at             DateTime @default(now())
+
+  membership_requests membership_requests @relation(fields: [membership_request_id], references: [id], onDelete: Cascade)
+  diwan_employees     diwan_employees? @relation(fields: [checked_by_employee_id], references: [id])
+}
+
+/* ---------------------------------------------------
+   11. membership_fees
+--------------------------------------------------- */
+model membership_fees {
+  id BigInt @id @default(autoincrement())
+  membership_request_id BigInt
+
+  registration_annual_fee   Decimal?
+  registration_idcard_fee   Decimal?
+  registration_total        Decimal?
+
+  death_aid_membership_fee  Decimal?
+  death_aid_annual_fee      Decimal?
+  death_aid_total           Decimal?
+
+  retirement_membership_fee Decimal?
+  retirement_annual_fee     Decimal?
+  retirement_total          Decimal?
+
+  receipt_branch_fee_number String?
+  receipt_branch_fee_date   DateTime?
+  receipt_death_aid_number  String?
+  receipt_death_aid_date    DateTime?
+  receipt_retirement_number String?
+  receipt_retirement_date   DateTime?
+
+  treasurer_employee_id Int?
+
+  membership_requests membership_requests @relation(fields: [membership_request_id], references: [id], onDelete: Cascade)
+  diwan_employees     diwan_employees? @relation(fields: [treasurer_employee_id], references: [id])
+}
+
+/* ---------------------------------------------------
+   12. training_requests
+--------------------------------------------------- */
+model training_requests {
+  id BigInt @id @default(autoincrement())
+
+  engineer_id BigInt
+
+  request_date DateTime?
+
+  host_office_id BigInt?
+  host_engineer_name String?
+  host_office_name  String?
+  host_office_address String?
+  host_office_specialization String?
+  host_office_registration_no String?
+
+  planned_training_duration_months Int?
+  has_previous_practice Boolean?
+  notes_from_branch String?
+
+  law_declaration_signed Boolean?
+  law_declaration_date   DateTime?
+  law_declaration_home_address String?
+
+  office_approval_date  DateTime?
+  office_approval_notes String?
+
+  training_size                  String?
+  office_division_decision_summary String?
+
+  status     String? @default("waiting_office")
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  engineers          engineers @relation(fields: [engineer_id], references: [id])
+  engineering_offices engineering_offices? @relation(fields: [host_office_id], references: [id])
+}
+
+/* ---------------------------------------------------
+   13. office_opening_requests
+--------------------------------------------------- */
+model office_opening_requests {
+  id BigInt @id @default(autoincrement())
+
+  engineer_id BigInt
+  request_date DateTime?
+
+  office_name    String?
+  office_type    String?
+  specialization String?
+  office_address String?
+  office_phone   String?
+
+  law_declaration_signed Boolean?
+  law_declaration_date   DateTime?
+  law_declaration_home_address String?
+
+  office_division_decision_no   String?
+  office_division_decision_date DateTime?
+
+  resulting_office_id BigInt?
+
+  status     String? @default("under_review")
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  engineers engineers @relation(fields: [engineer_id], references: [id])
+  engineering_offices engineering_offices? @relation(fields: [resulting_office_id], references: [id])
+}
+
+/* ---------------------------------------------------
+   14. promotion_requests
+--------------------------------------------------- */
+model promotion_requests {
+  id BigInt @id @default(autoincrement())
+
+  engineer_id BigInt
+
+  target_rank String
+  register_number String?
+  request_date DateTime?
+  specialization String?
+  work_address String?
+  residence_address String?
+  phone String?
+
+  membership_accept_decision_no   String?
+  membership_accept_decision_date DateTime?
+  membership_accept_branch        String?
+  last_modification_decision_no   String?
+  last_modification_decision_date DateTime?
+  last_modification_branch        String?
+
+  practice_summary_a String?
+  practice_summary_b String?
+
+  theoretical_entitlement_date DateTime?
+  half_delay_period_months Int?
+  entitlement_date DateTime?
+
+  first_committee_notes String?
+  second_committee_notes String?
+  administrative_opinion String?
+
+  branch_council_decision String?
+  branch_council_decision_date DateTime?
+  promotion_effective_date DateTime?
+
+  promotion_fee_amount Decimal?
+  promotion_fee_receipt_no String?
+  promotion_fee_receipt_date DateTime?
+
+  status     String? @default("under_review")
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  engineers engineers @relation(fields: [engineer_id], references: [id])
+
+  promotion_qualifications promotion_qualifications[]
+  promotion_experiences   promotion_experiences[]
+}
+
+/* ---------------------------------------------------
+   15. promotion_qualifications
+--------------------------------------------------- */
+model promotion_qualifications {
+  id BigInt @id @default(autoincrement())
+  promotion_request_id BigInt
+
+  degree_name           String?
+  obtained_date         DateTime?
+  specialization        String?
+  university_and_faculty String?
+
+  promotion_requests promotion_requests @relation(fields: [promotion_request_id], references: [id], onDelete: Cascade)
+}
+
+/* ---------------------------------------------------
+   16. promotion_experiences
+--------------------------------------------------- */
+model promotion_experiences {
+  id BigInt @id @default(autoincrement())
+  promotion_request_id BigInt
+
+  from_year Int?
+  to_year   Int?
+  employer  String?
+  job_title_and_work_type String?
+
+  promotion_requests promotion_requests @relation(fields: [promotion_request_id], references: [id], onDelete: Cascade)
+}
