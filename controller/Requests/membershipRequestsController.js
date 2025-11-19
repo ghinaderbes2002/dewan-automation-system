@@ -18,9 +18,7 @@ const serializeBigInt = (obj) => {
   return obj;
 };
 
-// ------------------------------------------------
 // GET كل طلبات الانتساب
-// ------------------------------------------------
 export const getMembershipRequests = async (req, res) => {
   try {
     const requests = await prisma.membership_requests.findMany({
