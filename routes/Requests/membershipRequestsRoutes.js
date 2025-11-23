@@ -20,29 +20,106 @@ import {
   deleteDeathAidForm,
 } from "../../controller/Requests/membershipRequestsController.js";
 
+import { auth, allowRoles } from "../../middlewares/auth.js";
+
 const router = express.Router();
 
 // ================== Membership Requests ==================
-router.get("/", getMembershipRequests);
-router.get("/:id", getMembershipRequestById);
-router.post("/", createMembershipRequest);
-router.patch("/:id", updateMembershipRequest);
-router.delete("/:id", deleteMembershipRequest);
-router.post("/:id/approve", approveMembershipRequest);
+router.get(
+  "/",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  getMembershipRequests
+);
+router.get(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  getMembershipRequestById
+);
+router.post(
+  "/",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  createMembershipRequest
+);
+router.patch(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  updateMembershipRequest
+);
+router.delete(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  deleteMembershipRequest
+);
+router.post(
+  "/:id/approve",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  approveMembershipRequest
+);
 
 // ================== Membership Documents ==================
-router.post("/documents", addMembershipDocument);
-router.patch("/documents/:id", updateMembershipDocument);
-router.delete("/documents/:id", deleteMembershipDocument);
+router.post(
+  "/documents",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  addMembershipDocument
+);
+router.patch(
+  "/documents/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  updateMembershipDocument
+);
+router.delete(
+  "/documents/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  deleteMembershipDocument
+);
 
 // ================== Membership Fees ==================
-router.post("/fees", addMembershipFee);
-router.patch("/fees/:id", updateMembershipFee);
-router.delete("/fees/:id", deleteMembershipFee);
+router.post(
+  "/fees",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  addMembershipFee
+);
+router.patch(
+  "/fees/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  updateMembershipFee
+);
+router.delete(
+  "/fees/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  deleteMembershipFee
+);
 
 // ================== Death Aid Forms ==================
-router.post("/death-aid", addDeathAidForm);
-router.patch("/death-aid/:id", updateDeathAidForm);
-router.delete("/death-aid/:id", deleteDeathAidForm);
+router.post(
+  "/death-aid",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  addDeathAidForm
+);
+router.patch(
+  "/death-aid/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  updateDeathAidForm
+);
+router.delete(
+  "/death-aid/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  deleteDeathAidForm
+);
 
 export default router;

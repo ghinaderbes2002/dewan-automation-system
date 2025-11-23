@@ -6,6 +6,7 @@ import employeesRoute from "./routes/employees/employeesRoute.js";
 import RequestsRoute from "./routes/Requests/membershipRequestsRoutes.js";
 import registryEntriesRoute from "./routes/registryEntries/registryEntriesRoute.js";
 import trainingRequestsRoutes from "./routes/Requests/trainingRequestsRoutes.js";
+import officeOpeningRoutes from "./routes/Requests/officeOpeningRoutes.js";
 
 
 
@@ -21,6 +22,7 @@ app.use("/employees", employeesRoute);
 app.use("/Requests", RequestsRoute); 
 app.use("/registry", registryEntriesRoute);
 app.use("/training_requests", trainingRequestsRoutes);
+app.use("/office_opening_requests", officeOpeningRoutes);
 
 
 

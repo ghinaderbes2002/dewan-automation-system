@@ -7,21 +7,48 @@ import {
   deleteTrainingRequest,
 } from "../../controller/Requests/trainingRequestsController.js";
 
+import { auth, allowRoles } from "../../middlewares/auth.js"; // استدعاء الميدل وير
+
 const router = express.Router();
 
-// GET جميع الطلبات
-router.get("/", getTrainingRequests);
+// GET جميع الطلبات => ممكن تخليه لأي موظف مسجل
+router.get(
+  "/",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  getTrainingRequests
+);
 
-// GET طلب محدد
-router.get("/:id", getTrainingRequestById);
+// GET طلب محدد => ممكن تخليه لأي موظف مسجل
+router.get(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  getTrainingRequestById
+);
 
-// POST إنشاء طلب جديد
-router.post("/", createTrainingRequest);
+// POST إنشاء طلب جديد => فقط لموظف MEMBERSHIP_AND_SERVICE
+router.post(
+  "/",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  createTrainingRequest
+);
 
-// PATCH تعديل طلب
-router.patch("/:id", updateTrainingRequest);
+// PATCH تعديل طلب => حسب الصلاحيات اللي بدك يحددها
+router.patch(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  updateTrainingRequest
+);
 
-// DELETE حذف طلب
-router.delete("/:id", deleteTrainingRequest);
+// DELETE حذف طلب => حسب الصلاحيات
+router.delete(
+  "/:id",
+  auth,
+  allowRoles("MEMBERSHIP_AND_SERVICE"),
+  deleteTrainingRequest
+);
 
 export default router;
