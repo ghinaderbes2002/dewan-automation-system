@@ -7,6 +7,7 @@ import RequestsRoute from "./routes/Requests/membershipRequestsRoutes.js";
 import registryEntriesRoute from "./routes/registryEntries/registryEntriesRoute.js";
 import trainingRequestsRoutes from "./routes/Requests/trainingRequestsRoutes.js";
 import officeOpeningRoutes from "./routes/Requests/officeOpeningRoutes.js";
+import promotionRequestsRoute from "./routes/Requests/promotionRequestsRoute.js";
 
 
 
@@ -23,6 +24,7 @@ app.use("/Requests", RequestsRoute);
 app.use("/registry", registryEntriesRoute);
 app.use("/training_requests", trainingRequestsRoutes);
 app.use("/office_opening_requests", officeOpeningRoutes);
+app.use("/promotion_requests", promotionRequestsRoute);
 
 
 
