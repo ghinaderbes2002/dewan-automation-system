@@ -11,6 +11,11 @@ export const documentTypesMap = {
   doc_work_permit_non_syrian: "work_permit_non_syrian",
   doc_residence_statement_non_employee: "residence_statement_non_employee",
   doc_fees_paid_confirmation: "fees_paid_confirmation",
+
+  // ✨ التواقيع ↓↓
+  applicant_signature: "signature_applicant",
+  engineer_signature: "signature_engineer",
+  branch_chair_signature: "signature_branch_chair",
 };
 
 
