@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import { promotionDocumentTypesMap } from "../../utils/documentTypes.js";
+
+
 
 // Helper لتحويل BigInt
 const serializeBigInt = (obj) => {
@@ -237,5 +240,45 @@ export const deletePromotionRequest = async (req, res) => {
     res.json({ message: "Deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+
+export const uploadPromotionDocuments = async (req, res) => {
+  try {
+    const { promotionRequestId } = req.body;
+    const employeeId = req.user.id;
+
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    const uploadedFiles = [];
+
+    for (const fieldName of Object.keys(req.files)) {
+      const file = req.files[fieldName][0];
+      const documentType = promotionDocumentTypesMap[fieldName];
+
+      await prisma.attachments.create({
+        data: {
+          request_type: "PROMOTION",
+          request_id: Number(promotionRequestId),
+          document_type: documentType,
+          file_path: `/uploads/promotion/${file.filename}`,
+          uploaded_by_employee_id: employeeId,
+        },
+      });
+
+      uploadedFiles.push({
+        field: fieldName,
+        document_type: documentType,
+        file_path: `/uploads/promotion/${file.filename}`,
+      });
+    }
+
+    res.json({ message: "Files uploaded successfully", files: uploadedFiles });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };

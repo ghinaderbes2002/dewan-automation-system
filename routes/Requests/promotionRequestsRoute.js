@@ -5,7 +5,9 @@ import {
   createPromotionRequest,
   updatePromotionRequest,
   deletePromotionRequest,
+  uploadPromotionDocuments,
 } from "../../controller/Requests/promotionRequestsController.js";
+import { uploadPromotionFields } from "../../middlewares/uploadPromotion.js";
 
 import { auth, allowRoles } from "../../middlewares/auth.js";
 
@@ -50,5 +52,7 @@ router.delete(
   allowRoles("MEMBERSHIP_AND_SERVICE"),
   deletePromotionRequest
 );
+
+router.post("/upload", auth, uploadPromotionFields, uploadPromotionDocuments);
 
 export default router;

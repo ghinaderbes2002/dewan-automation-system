@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 
-// ======================
+
 // التحقق من التوكن
-// ======================
 export const auth = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
@@ -22,10 +21,8 @@ export const auth = (req, res, next) => {
   }
 };
 
-// ======================
 // التحقق من الصلاحيات (الأدوار)
-// ======================
-export const allowRoles = (...allowedRoles) => {
+export const allowRoles = (requiredRole) => {
   return (req, res, next) => {
     const user = req.user;
 
@@ -33,10 +30,10 @@ export const allowRoles = (...allowedRoles) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    console.log("Allowed roles => ", allowedRoles);
-    console.log("User role => ", user.role);
+    console.log("Required role =>", requiredRole);
+    console.log("User role =>", user.role);
 
-    if (!allowedRoles.includes(user.role)) {
+    if (user.role !== requiredRole) {
       return res.status(403).json({ message: "Access denied" });
     }
 

@@ -21,3 +21,5 @@ const fields = Object.keys(documentTypesMap).map((key) => ({
 }));
 
 export const uploadMembershipFields = upload.fields(fields);
+
+
