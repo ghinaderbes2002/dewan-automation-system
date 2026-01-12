@@ -1,0 +1,950 @@
+{
+	"info": {
+		"_postman_id": "dewan-automation-system",
+		"name": "Dewan Automation System API",
+		"description": "مجموعة كاملة لجميع endpoints نظام أتمتة الديوان بعد إضافة ميزة المهندسين",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Auth - Employees (الموظفين)",
+			"item": [
+				{
+					"name": "Login Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/auth/login",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["auth", "login"]
+						},
+						"description": "تسجيل دخول موظف"
+					}
+				},
+				{
+					"name": "Get My Info (Employee)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/auth/me",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["auth", "me"]
+						},
+						"description": "جلب معلومات الموظف الحالي"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Engineers (المهندسين) - NEW",
+			"item": [
+				{
+					"name": "Register Engineer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"full_name_ar\": \"أحمد محمد علي\",\n  \"email\": \"ahmad@example.com\",\n  \"mobile\": \"0911234567\",\n  \"national_id_number\": \"01234567890\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/register",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "register"]
+						},
+						"description": "تسجيل مهندس جديد في النظام"
+					}
+				},
+				{
+					"name": "Login Engineer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"ahmad@example.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/login",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "login"]
+						},
+						"description": "تسجيل دخول مهندس (يمكن استخدام username أو email أو mobile)"
+					}
+				},
+				{
+					"name": "Get My Profile (Engineer)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/engineers/me",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "me"]
+						},
+						"description": "جلب معلومات المهندس الشخصية"
+					}
+				},
+				{
+					"name": "Get My Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/engineers/my-requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "my-requests"]
+						},
+						"description": "جلب جميع طلبات المهندس (انتساب، تدريب، مكاتب، ترقيات)"
+					}
+				},
+				{
+					"name": "Submit Membership Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"request_scope\": \"انتساب\",\n  \"full_name_ar\": \"أحمد محمد علي\",\n  \"father_name\": \"محمد\",\n  \"mother_name\": \"فاطمة\",\n  \"national_id_number\": \"01234567890\",\n  \"birth_date\": \"1995-05-15T00:00:00.000Z\",\n  \"birth_place\": \"دمشق\",\n  \"nationality\": \"سوري\",\n  \"university_name\": \"جامعة دمشق\",\n  \"faculty_name\": \"كلية الهندسة المعمارية\",\n  \"degree_title\": \"إجازة في الهندسة المعمارية\",\n  \"specialization\": \"هندسة معمارية\",\n  \"academic_year\": \"2018\",\n  \"mobile\": \"0911234567\",\n  \"email\": \"ahmad@example.com\",\n  \"home_address\": \"دمشق - المزة\",\n  \"laws_acknowledged\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/requests/membership",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "requests", "membership"]
+						},
+						"description": "تقديم طلب انتساب للنقابة"
+					}
+				},
+				{
+					"name": "Submit Training Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"host_office_name\": \"مكتب الهندسة المتقدمة\",\n  \"host_office_address\": \"دمشق - أبو رمانة\",\n  \"host_office_specialization\": \"هندسة معمارية\",\n  \"planned_training_duration_months\": 12,\n  \"has_previous_practice\": false,\n  \"law_declaration_signed\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/requests/training",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "requests", "training"]
+						},
+						"description": "تقديم طلب تدريب (يجب أن يكون المهندس مسجل بالنقابة)"
+					}
+				},
+				{
+					"name": "Submit Office Opening Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"office_name\": \"مكتب المهندس أحمد محمد\",\n  \"office_type\": \"فردي\",\n  \"specialization\": \"هندسة معمارية\",\n  \"office_address\": \"دمشق - المزة\",\n  \"office_phone\": \"0112345678\",\n  \"law_declaration_signed\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/requests/office-opening",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "requests", "office-opening"]
+						},
+						"description": "تقديم طلب فتح مكتب هندسي"
+					}
+				},
+				{
+					"name": "Submit Promotion Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{engineer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"target_rank\": \"مهندس أول\",\n  \"specialization\": \"هندسة معمارية\",\n  \"work_address\": \"دمشق - المزة\",\n  \"residence_address\": \"دمشق - المزة\",\n  \"phone\": \"0911234567\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/engineers/requests/promotion",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["engineers", "requests", "promotion"]
+						},
+						"description": "تقديم طلب ترقية"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Membership Requests (طلبات الانتساب)",
+			"item": [
+				{
+					"name": "Get All Membership Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests"]
+						},
+						"description": "جلب كل طلبات الانتساب (للموظف)"
+					}
+				},
+				{
+					"name": "Get Membership Request By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Membership Request (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"request_scope\": \"انتساب\",\n  \"full_name_ar\": \"خالد أحمد\",\n  \"national_id_number\": \"09876543210\",\n  \"university_name\": \"جامعة حلب\",\n  \"specialization\": \"هندسة مدنية\",\n  \"status\": \"draft\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/Requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests"]
+						},
+						"description": "إنشاء طلب انتساب (من قبل الموظف)"
+					}
+				},
+				{
+					"name": "Update Membership Request",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/Requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "1"]
+						}
+					}
+				},
+				{
+					"name": "Approve Membership Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests/1/approve",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "1", "approve"]
+						},
+						"description": "الموافقة على طلب وتحويله لسجل مهندس"
+					}
+				},
+				{
+					"name": "Delete Membership Request",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Training Requests (طلبات التدريب)",
+			"item": [
+				{
+					"name": "Get All Training Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/training_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["training_requests"]
+						}
+					}
+				},
+				{
+					"name": "Get Training Request By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/training_requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["training_requests", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Training Request (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"engineer_id\": \"1\",\n  \"host_office_name\": \"مكتب الهندسة الحديثة\",\n  \"planned_training_duration_months\": 12\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/training_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["training_requests"]
+						}
+					}
+				},
+				{
+					"name": "Update Training Request",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/training_requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["training_requests", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Training Request",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/training_requests/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["training_requests", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Office Opening Requests (طلبات فتح المكاتب)",
+			"item": [
+				{
+					"name": "Get All Office Opening Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/office_opening_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["office_opening_requests"]
+						}
+					}
+				},
+				{
+					"name": "Create Office Opening Request (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"engineer_id\": \"1\",\n  \"office_name\": \"مكتب الهندسة الاستشارية\",\n  \"office_type\": \"فردي\",\n  \"specialization\": \"هندسة معمارية\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/office_opening_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["office_opening_requests"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Promotion Requests (طلبات الترقية)",
+			"item": [
+				{
+					"name": "Get All Promotion Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/promotion_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["promotion_requests"]
+						}
+					}
+				},
+				{
+					"name": "Create Promotion Request (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"engineer_id\": \"1\",\n  \"target_rank\": \"مهندس أول\",\n  \"specialization\": \"هندسة معمارية\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/promotion_requests",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["promotion_requests"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Employees (إدارة الموظفين)",
+			"item": [
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/employees",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["employees"]
+						}
+					}
+				},
+				{
+					"name": "Create Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"full_name\": \"محمد أحمد\",\n  \"job_role\": \"ISSUING\",\n  \"username\": \"mohamed\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/employees",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["employees"]
+						}
+					}
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_active\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/employees/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["employees", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Registry Entries (الصادر والوارد)",
+			"item": [
+				{
+					"name": "Get All Registry Entries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/registry",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["registry"]
+						}
+					}
+				},
+				{
+					"name": "Create Registry Entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"registry_no\": \"123/2024\",\n  \"direction\": \"وارد\",\n  \"date\": \"2024-01-15T00:00:00.000Z\",\n  \"from_entity\": \"جامعة دمشق\",\n  \"subject\": \"طلب تصديق شهادة\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/registry",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["registry"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Auditor (التدقيق)",
+			"item": [
+				{
+					"name": "Get Pending Requests (Membership)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auditor_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/auditor/requests/membership",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["auditor", "requests", "membership"]
+						},
+						"description": "جلب طلبات الانتساب المعلقة للتدقيق"
+					}
+				},
+				{
+					"name": "Get Request Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auditor_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/auditor/requests/membership/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["auditor", "requests", "membership", "1"]
+						}
+					}
+				},
+				{
+					"name": "Audit Request",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auditor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"notes\": \"تم التدقيق والموافقة\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/auditor/requests/membership/1/audit",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["auditor", "requests", "membership", "1", "audit"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Documents & Fees (المستندات والرسوم)",
+			"item": [
+				{
+					"name": "Get Membership Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests/documents?request_id=1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "documents"],
+							"query": [
+								{
+									"key": "request_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Documents Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"membership_request_id\": \"1\",\n  \"doc_civil_registry_or_id_copy\": true,\n  \"doc_engineering_degree_certified\": true,\n  \"doc_photos_4x3\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/Requests/documents",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "documents"]
+						}
+					}
+				},
+				{
+					"name": "Get Membership Fees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/Requests/fees?request_id=1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "fees"],
+							"query": [
+								{
+									"key": "request_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Fees Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"membership_request_id\": \"1\",\n  \"registration_annual_fee\": \"50000\",\n  \"registration_idcard_fee\": \"10000\",\n  \"registration_total\": \"60000\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/Requests/fees",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["Requests", "fees"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000"
+		},
+		{
+			"key": "employee_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "engineer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "auditor_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

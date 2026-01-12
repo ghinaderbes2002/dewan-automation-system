@@ -4,6 +4,11 @@ const prisma = new PrismaClient();
 // دالة مساعدة لتحويل كل BigInt إلى String
 const serializeBigInt = (obj) => {
   if (!obj) return obj;
+
+  if (obj instanceof Date) {
+    return obj.toISOString(); // أو .slice(0, 10) لو بدك اليوم فقط
+  }
+  
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
   if (typeof obj === "object") {
     const newObj = {};
@@ -39,6 +44,9 @@ export const getRegistryEntries = async (req, res) => {
       where: filter,
       orderBy: { date: "desc" },
     });
+
+
+    
 
     res.json(serializeBigInt(results));
   } catch (error) {

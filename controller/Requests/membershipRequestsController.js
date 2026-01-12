@@ -1,312 +1,3 @@
-// import { PrismaClient } from "@prisma/client";
-// import { documentTypesMap } from "../../utils/documentTypes.js";
-
-// const prisma = new PrismaClient();
-
-// // دالة لتحويل كل BigInt إلى String
-// const serializeBigInt = (obj) => {
-//   if (!obj) return obj;
-//   if (Array.isArray(obj)) return obj.map(serializeBigInt);
-//   if (typeof obj === "object") {
-//     const newObj = {};
-//     for (const key in obj) {
-//       if (typeof obj[key] === "bigint") newObj[key] = obj[key].toString();
-//       else if (typeof obj[key] === "object")
-//         newObj[key] = serializeBigInt(obj[key]);
-//       else newObj[key] = obj[key];
-//     }
-//     return newObj;
-//   }
-//   return obj;
-// };
-
-// // GET كل طلبات الانتساب
-// export const getMembershipRequests = async (req, res) => {
-//   try {
-//     const requests = await prisma.membership_requests.findMany({
-//       include: {
-//         membership_documents: true,
-//         membership_fees: true,
-//         death_aid_forms: true,
-//         engineers: true,
-//       },
-//     });
-//     res.json(serializeBigInt(requests));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// // ------------------------------------------------
-// // GET طلب محدد
-// // ------------------------------------------------
-// export const getMembershipRequestById = async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const request = await prisma.membership_requests.findUnique({
-//       where: { id: BigInt(id) },
-//       include: {
-//         membership_documents: true,
-//         membership_fees: true,
-//         death_aid_forms: true,
-//         engineers: true,
-//       },
-//     });
-//     res.json(serializeBigInt(request));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// // إنشاء طلب جديد
-// export const createMembershipRequest = async (req, res) => {
-//   try {
-//     const data = req.body;
-//     const request = await prisma.membership_requests.create({ data });
-//     res.json(serializeBigInt(request));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
-// // تعديل طلب
-// export const updateMembershipRequest = async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const data = req.body;
-//     const updatedRequest = await prisma.membership_requests.update({
-//       where: { id: BigInt(id) },
-//       data,
-//     });
-//     res.json(serializeBigInt(updatedRequest));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// // حذف طلب
-// export const deleteMembershipRequest = async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     await prisma.membership_requests.delete({ where: { id: BigInt(id) } });
-//     res.json({ message: "Deleted successfully" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// // اعتماد الطلب وتحويله لسجل مهندس
-// export const approveMembershipRequest = async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const request = await prisma.membership_requests.findUnique({
-//       where: { id: BigInt(id) },
-//     });
-//     if (!request) return res.status(404).json({ error: "Request not found" });
-
-//     // إنشاء المهندس
-//     const engineer = await prisma.engineers.create({
-//       data: {
-//         full_name_ar: request.full_name_ar,
-//         full_name_en: [request.first_name_en, request.last_name_en]
-//           .filter(Boolean)
-//           .join(" "),
-//         national_id_number: request.national_id_number,
-//         birth_date: request.birth_date,
-//         birth_place: request.birth_place,
-//         civil_registry_office: request.civil_registry_office,
-//         nationality: request.nationality,
-//         phone: request.phone,
-//         mobile: request.mobile,
-//         email: request.email,
-//         address: request.home_address,
-//       },
-//     });
-
-//     // تحديث الطلب مع ربط المهندس وتغيير الحالة
-//     const updatedRequest = await prisma.membership_requests.update({
-//       where: { id: BigInt(id) },
-//       data: {
-//         status: "approved",
-//         engineer_id: engineer.id,
-//       },
-//     });
-
-//     res.json({
-//       request: serializeBigInt(updatedRequest),
-//       engineer: serializeBigInt(engineer),
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
-// // إدارة المستندات المرتبطة
-// export const addMembershipDocument = async (req, res) => {
-//   try {
-//     const data = req.body;
-//     const doc = await prisma.membership_documents.create({ data });
-//     res.json(serializeBigInt(doc));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const updateMembershipDocument = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const data = req.body;
-//     const updated = await prisma.membership_documents.update({
-//       where: { id: BigInt(id) },
-//       data,
-//     });
-//     res.json(serializeBigInt(updated));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const deleteMembershipDocument = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     await prisma.membership_documents.delete({ where: { id: BigInt(id) } });
-//     res.json({ message: "Deleted successfully" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const uploadMembershipDocument = async (req, res) => {
-//   try {
-//     const { membershipRequestId, request_type } = req.body;
-//     const employeeId = req.user.id; // أخذناها من التوكن
-
-//     if (!req.files || Object.keys(req.files).length === 0) {
-//       return res.status(400).json({ message: "No files uploaded" });
-//     }
-
-//     const uploadedFiles = [];
-
-//     for (const fieldName of Object.keys(req.files)) {
-//       const fileArray = req.files[fieldName];
-//       if (!documentTypesMap[fieldName]) continue;
-
-//       const documentType = documentTypesMap[fieldName];
-//       const file = fileArray[0];
-
-//       // 1) إنشاء سجل في جدول attachments
-//       await prisma.attachments.create({
-//         data: {
-//           request_type, // مو ثابت
-//           request_id: Number(membershipRequestId),
-//           document_type: documentType,
-//           file_path: `/uploads/membership/${file.filename}`,
-//           uploaded_by_employee_id: employeeId, // من التوكن
-//         },
-//       });
-
-//       // 2) تحديث جدول membership_documents
-//       await prisma.membership_documents.updateMany({
-//         where: { membership_request_id: Number(membershipRequestId) },
-//         data: { [fieldName]: true },
-//       });
-
-//       uploadedFiles.push({
-//         field: fieldName,
-//         document_type: documentType,
-//         file_path: `/uploads/membership/${file.filename}`,
-//       });
-//     }
-
-//     return res.json({
-//       message: "Documents uploaded successfully",
-//       files: uploadedFiles,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
-
-// // ------------------------------------------------
-// // إدارة الرسوم المرتبطة
-// // ------------------------------------------------
-// export const addMembershipFee = async (req, res) => {
-//   try {
-//     const data = req.body;
-//     const fee = await prisma.membership_fees.create({ data });
-//     res.json(serializeBigInt(fee));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const updateMembershipFee = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const data = req.body;
-//     const updated = await prisma.membership_fees.update({
-//       where: { id: BigInt(id) },
-//       data,
-//     });
-//     res.json(serializeBigInt(updated));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const deleteMembershipFee = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     await prisma.membership_fees.delete({ where: { id: BigInt(id) } });
-//     res.json({ message: "Deleted successfully" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// // ------------------------------------------------
-// // إدارة Death Aid Forms
-// // ------------------------------------------------
-// export const addDeathAidForm = async (req, res) => {
-//   try {
-//     const data = req.body;
-//     const form = await prisma.death_aid_forms.create({ data });
-//     res.json(serializeBigInt(form));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const updateDeathAidForm = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const data = req.body;
-//     const updated = await prisma.death_aid_forms.update({
-//       where: { id: BigInt(id) },
-//       data,
-//     });
-//     res.json(serializeBigInt(updated));
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const deleteDeathAidForm = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     await prisma.death_aid_forms.delete({ where: { id: BigInt(id) } });
-//     res.json({ message: "Deleted successfully" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
-
 // controller/Requests/membershipRequestsController.js
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
@@ -412,23 +103,73 @@ export const approveMembershipRequest = async (req, res) => {
     });
     if (!request) return res.status(404).json({ error: "Request not found" });
 
-    const engineer = await prisma.engineers.create({
-      data: {
-        full_name_ar: request.full_name_ar,
-        full_name_en: [request.first_name_en, request.last_name_en]
-          .filter(Boolean)
-          .join(" "),
-        national_id_number: request.national_id_number,
-        birth_date: request.birth_date,
-        birth_place: request.birth_place,
-        civil_registry_office: request.civil_registry_office,
-        nationality: request.nationality,
-        phone: request.phone,
-        mobile: request.mobile,
-        email: request.email,
-        address: request.home_address,
-      },
-    });
+    // التحقق إذا الطلب مربوط بمهندس موجود (قدمه المهندس بنفسه)
+    let engineer;
+
+    if (request.engineer_id) {
+      // الطلب قدمه مهندس موجود، نحدث بياناته ونفعّل حسابه
+      // نجيب المهندس الحالي عشان نتجنب تحديث الحقول الـ unique اللي نفسها
+      const existingEngineer = await prisma.engineers.findUnique({
+        where: { id: request.engineer_id }
+      });
+
+      const updateData = {
+        is_registered: true, // المهندس صار مسجل بالنقابة
+        full_name_ar: request.full_name_ar || existingEngineer.full_name_ar,
+        birth_date: request.birth_date || existingEngineer.birth_date,
+        birth_place: request.birth_place || existingEngineer.birth_place,
+        civil_registry_office: request.civil_registry_office || existingEngineer.civil_registry_office,
+        nationality: request.nationality || existingEngineer.nationality,
+        address: request.home_address || existingEngineer.address,
+      };
+
+      // نضيف full_name_en فقط إذا في بيانات
+      const fullNameEn = [request.first_name_en, request.last_name_en]
+        .filter(Boolean)
+        .join(" ");
+      if (fullNameEn) {
+        updateData.full_name_en = fullNameEn;
+      }
+
+      // نحدث الحقول الـ unique فقط إذا تغيرت
+      if (request.national_id_number && request.national_id_number !== existingEngineer.national_id_number) {
+        updateData.national_id_number = request.national_id_number;
+      }
+      if (request.mobile && request.mobile !== existingEngineer.mobile) {
+        updateData.mobile = request.mobile;
+      }
+      if (request.email && request.email !== existingEngineer.email) {
+        updateData.email = request.email;
+      }
+      if (request.phone && request.phone !== existingEngineer.phone) {
+        updateData.phone = request.phone;
+      }
+
+      engineer = await prisma.engineers.update({
+        where: { id: request.engineer_id },
+        data: updateData,
+      });
+    } else {
+      // الطلب قدمه موظف، ننشئ مهندس جديد
+      engineer = await prisma.engineers.create({
+        data: {
+          full_name_ar: request.full_name_ar,
+          full_name_en: [request.first_name_en, request.last_name_en]
+            .filter(Boolean)
+            .join(" "),
+          national_id_number: request.national_id_number,
+          birth_date: request.birth_date,
+          birth_place: request.birth_place,
+          civil_registry_office: request.civil_registry_office,
+          nationality: request.nationality,
+          phone: request.phone,
+          mobile: request.mobile,
+          email: request.email,
+          address: request.home_address,
+          is_registered: true, // مسجل بالنقابة
+        },
+      });
+    }
 
     const updatedRequest = await prisma.membership_requests.update({
       where: { id: BigInt(id) },
@@ -439,11 +180,35 @@ export const approveMembershipRequest = async (req, res) => {
     });
 
     res.json({
+      message: "تم قبول طلب الانتساب بنجاح",
       request: serializeBigInt(updatedRequest),
       engineer: serializeBigInt(engineer),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("خطأ في الموافقة على طلب الانتساب:", err);
+
+    // معالجة أخطاء القيود الفريدة
+    if (err.code === 'P2002') {
+      const field = err.meta?.target?.[0];
+      const arabicFieldNames = {
+        'mobile': 'رقم الموبايل',
+        'email': 'البريد الإلكتروني',
+        'national_id_number': 'الرقم الوطني',
+        'phone': 'رقم الهاتف'
+      };
+      return res.status(400).json({
+        message: `${arabicFieldNames[field] || field} موجود مسبقاً لمهندس آخر في النظام`
+      });
+    }
+
+    // معالجة أخطاء المفاتيح الخارجية
+    if (err.code === 'P2003') {
+      return res.status(400).json({
+        message: 'خطأ في الربط بين البيانات. يرجى التحقق من المعلومات المدخلة'
+      });
+    }
+
+    res.status(500).json({ message: "حدث خطأ في الموافقة على الطلب" });
   }
 };
 
@@ -559,10 +324,24 @@ export const deleteMembershipDocument = async (req, res) => {
 };
 
 
+// رفع ملفات المستندات + ربطها بالـ attachments و membership_documents
 export const uploadMembershipDocument = async (req, res) => {
   try {
     const { membershipRequestId, request_type } = req.body;
-    const employeeId = req.user.id; // أخذناها من التوكن
+    const employeeId = req.user.id;
+
+    if (!membershipRequestId) {
+      return res.status(400).json({ message: "membershipRequestId مطلوب" });
+    }
+
+    const idStr = String(membershipRequestId);
+    if (!/^\d+$/.test(idStr)) {
+      return res
+        .status(400)
+        .json({ message: "membershipRequestId يجب أن يكون رقمياً" });
+    }
+
+    const requestId = BigInt(idStr);
 
     if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
@@ -580,24 +359,24 @@ export const uploadMembershipDocument = async (req, res) => {
       // 1) إنشاء سجل في جدول attachments
       await prisma.attachments.create({
         data: {
-          request_type, // مو ثابت
-          request_id: Number(membershipRequestId),
+          request_type,
+          request_id: requestId,
           document_type: documentType,
-          file_path: `/uploads/membership/${file.filename}`,
-          uploaded_by_employee_id: employeeId, // من التوكن
+          file_path:`/uploads/membership/${file.filename}`,
+          uploaded_by_employee_id: employeeId,
         },
       });
 
       // 2) تحديث جدول membership_documents
       await prisma.membership_documents.updateMany({
-        where: { membership_request_id: Number(membershipRequestId) },
+        where: { membership_request_id: requestId },
         data: { [fieldName]: true },
       });
 
       uploadedFiles.push({
         field: fieldName,
         document_type: documentType,
-        file_path: `/uploads/membership/${file.filename}`,
+        file_path:`/uploads/membership/${file.filename}`,
       });
     }
 
@@ -606,8 +385,10 @@ export const uploadMembershipDocument = async (req, res) => {
       files: uploadedFiles,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Server error", error });
+    console.log("uploadMembershipDocument error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 

@@ -22,15 +22,22 @@ model engineers {
   id                   BigInt   @id @default(autoincrement())
   full_name_ar         String
   full_name_en         String?
-  national_id_number   String?
+  national_id_number   String?  @unique
   nationality          String?
   birth_date           DateTime?
   birth_place          String?
   civil_registry_office String?
   phone                String?
-  mobile               String?
-  email                String?
+  mobile               String?  @unique
+  email                String?  @unique
   address              String?
+
+  // حقول المصادقة - للمهندسين اللي بدهم يسجلوا دخول
+  username             String?  @unique
+  password_hash        String?
+  is_active            Boolean  @default(true)
+  is_registered        Boolean  @default(false) // هل مسجل بالنقابة؟
+
   created_at           DateTime @default(now())
   updated_at           DateTime @default(now())
 
@@ -56,7 +63,7 @@ model diwan_employees {
   attachments                 attachments[]
   membership_requests_received membership_requests[] @relation("ReceivedBy")
   membership_requests_study    membership_requests[] @relation("StudyBy")
-  membership_documents          membership_documents[]
+  membership_documents         membership_documents[]
   membership_fees              membership_fees[]
 }
 
@@ -145,6 +152,9 @@ model membership_requests {
   inbound_number String?
   inbound_date   DateTime?
   engineer_id    BigInt?
+
+  // من قدم الطلب؟
+  submitted_by   String?  @default("employee") // "engineer" أو "employee"
 
   full_name_ar   String
   first_name_en  String?
@@ -317,6 +327,9 @@ model training_requests {
 
   engineer_id BigInt
 
+  // من قدم الطلب؟
+  submitted_by   String?  @default("employee") // "engineer" أو "employee"
+
   request_date DateTime?
 
   host_office_id BigInt?
@@ -355,6 +368,10 @@ model office_opening_requests {
   id BigInt @id @default(autoincrement())
 
   engineer_id BigInt
+
+  // من قدم الطلب؟
+  submitted_by   String?  @default("employee") // "engineer" أو "employee"
+
   request_date DateTime?
 
   office_name    String?
@@ -387,6 +404,9 @@ model promotion_requests {
   id BigInt @id @default(autoincrement())
 
   engineer_id BigInt
+
+  // من قدم الطلب؟
+  submitted_by   String?  @default("employee") // "engineer" أو "employee"
 
   target_rank String
   register_number String?
