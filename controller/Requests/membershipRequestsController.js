@@ -1,21 +1,38 @@
 // controller/Requests/membershipRequestsController.js
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import { documentTypesMap } from "../../utils/documentTypes.js";
 
-// دالة لتحويل كل BigInt إلى String
+// دالة لتحويل كل BigInt إلى String و Date إلى ISO String و Decimal إلى String
 const serializeBigInt = (obj) => {
-  if (!obj) return obj;
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") return obj.toString();
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj.constructor && obj.constructor.name === "Decimal") return obj.toString();
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
+
   if (typeof obj === "object") {
     const newObj = {};
     for (const key in obj) {
-      if (typeof obj[key] === "bigint") newObj[key] = obj[key].toString();
-      else if (typeof obj[key] === "object")
-        newObj[key] = serializeBigInt(obj[key]);
-      else newObj[key] = obj[key];
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (typeof value === "bigint") {
+          newObj[key] = value.toString();
+        } else if (value instanceof Date) {
+          newObj[key] = value.toISOString();
+        } else if (value && value.constructor && value.constructor.name === "Decimal") {
+          newObj[key] = value.toString();
+        } else if (typeof value === "object" && value !== null) {
+          newObj[key] = serializeBigInt(value);
+        } else {
+          newObj[key] = value;
+        }
+      }
     }
     return newObj;
   }
+
   return obj;
 };
 
@@ -62,9 +79,9 @@ export const createMembershipRequest = async (req, res) => {
   try {
     const data = req.body;
     const request = await prisma.membership_requests.create({ data });
-    res.json(serializeBigInt(request));
+    res.json({ message: "تم إنشاء طلب الانتساب بنجاح", data: serializeBigInt(request) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء إنشاء طلب الانتساب", error: err.message });
   }
 };
 
@@ -77,9 +94,9 @@ export const updateMembershipRequest = async (req, res) => {
       where: { id: BigInt(id) },
       data,
     });
-    res.json(serializeBigInt(updatedRequest));
+    res.json({ message: "تم تعديل طلب الانتساب بنجاح", data: serializeBigInt(updatedRequest) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء تعديل طلب الانتساب", error: err.message });
   }
 };
 
@@ -88,9 +105,9 @@ export const deleteMembershipRequest = async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.membership_requests.delete({ where: { id: BigInt(id) } });
-    res.json({ message: "Deleted successfully" });
+    res.json({ message: "تم حذف طلب الانتساب بنجاح" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء حذف طلب الانتساب", error: err.message });
   }
 };
 
@@ -101,7 +118,7 @@ export const approveMembershipRequest = async (req, res) => {
     const request = await prisma.membership_requests.findUnique({
       where: { id: BigInt(id) },
     });
-    if (!request) return res.status(404).json({ error: "Request not found" });
+    if (!request) return res.status(404).json({ message: "طلب الانتساب غير موجود" });
 
     // التحقق إذا الطلب مربوط بمهندس موجود (قدمه المهندس بنفسه)
     let engineer;
@@ -224,7 +241,7 @@ export const getMembershipDocuments = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "Invalid request_id, must be numeric" });
+          .json({ message: "رقم الطلب يجب أن يكون رقمياً" });
       }
       where.membership_request_id = BigInt(idStr);
     }
@@ -234,7 +251,7 @@ export const getMembershipDocuments = async (req, res) => {
     res.json(serialized);
   } catch (err) {
     console.error("getMembershipDocuments error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء جلب المستندات", error: err.message });
   }
 };
 
@@ -246,14 +263,14 @@ export const addMembershipDocument = async (req, res) => {
     if (!membership_request_id) {
       return res
         .status(400)
-        .json({ error: "membership_request_id مطلوب" });
+        .json({ message: "رقم طلب الانتساب مطلوب" });
     }
 
     const idStr = String(membership_request_id);
     if (!/^\d+$/.test(idStr)) {
       return res
         .status(400)
-        .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+        .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
     }
 
     const requestId = BigInt(idStr);
@@ -265,7 +282,7 @@ export const addMembershipDocument = async (req, res) => {
     if (!request) {
       return res
         .status(400)
-        .json({ error: "طلب الانتساب غير موجود في قاعدة البيانات" });
+        .json({ message: "طلب الانتساب غير موجود" });
     }
 
     const doc = await prisma.membership_documents.create({
@@ -275,10 +292,10 @@ export const addMembershipDocument = async (req, res) => {
       },
     });
 
-    res.json(serializeBigInt(doc));
+    res.json({ message: "تم إضافة سجل المستندات بنجاح", data: serializeBigInt(doc) });
   } catch (err) {
     console.error("addMembershipDocument error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء إضافة المستندات", error: err.message });
   }
 };
 
@@ -294,7 +311,7 @@ export const updateMembershipDocument = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+          .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
       }
       rawData.membership_request_id = BigInt(idStr);
     }
@@ -304,10 +321,10 @@ export const updateMembershipDocument = async (req, res) => {
       data: rawData,
     });
 
-    res.json(serializeBigInt(updated));
+    res.json({ message: "تم تعديل المستندات بنجاح", data: serializeBigInt(updated) });
   } catch (err) {
     console.error("updateMembershipDocument error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء تعديل المستندات", error: err.message });
   }
 };
 
@@ -316,10 +333,10 @@ export const deleteMembershipDocument = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.membership_documents.delete({ where: { id: BigInt(id) } });
-    res.json({ message: "Deleted successfully" });
+    res.json({ message: "تم حذف سجل المستندات بنجاح" });
   } catch (err) {
     console.error("deleteMembershipDocument error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء حذف المستندات", error: err.message });
   }
 };
 
@@ -327,24 +344,27 @@ export const deleteMembershipDocument = async (req, res) => {
 // رفع ملفات المستندات + ربطها بالـ attachments و membership_documents
 export const uploadMembershipDocument = async (req, res) => {
   try {
+    console.log("uploadMembershipDocument - body:", req.body);
+    console.log("uploadMembershipDocument - files:", req.files ? Object.keys(req.files) : "no files");
+
     const { membershipRequestId, request_type } = req.body;
     const employeeId = req.user.id;
 
     if (!membershipRequestId) {
-      return res.status(400).json({ message: "membershipRequestId مطلوب" });
+      return res.status(400).json({ message: "رقم طلب الانتساب مطلوب" });
     }
 
     const idStr = String(membershipRequestId);
     if (!/^\d+$/.test(idStr)) {
       return res
         .status(400)
-        .json({ message: "membershipRequestId يجب أن يكون رقمياً" });
+        .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
     }
 
     const requestId = BigInt(idStr);
 
     if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).json({ message: "No files uploaded" });
+      return res.status(400).json({ message: "لم يتم رفع أي ملفات" });
     }
 
     const uploadedFiles = [];
@@ -367,11 +387,13 @@ export const uploadMembershipDocument = async (req, res) => {
         },
       });
 
-      // 2) تحديث جدول membership_documents
-      await prisma.membership_documents.updateMany({
-        where: { membership_request_id: requestId },
-        data: { [fieldName]: true },
-      });
+      // 2) تحديث جدول membership_documents (فقط للحقول التي تبدأ بـ doc_)
+      if (fieldName.startsWith("doc_")) {
+        await prisma.membership_documents.updateMany({
+          where: { membership_request_id: requestId },
+          data: { [fieldName]: true },
+        });
+      }
 
       uploadedFiles.push({
         field: fieldName,
@@ -381,14 +403,14 @@ export const uploadMembershipDocument = async (req, res) => {
     }
 
     return res.json({
-      message: "Documents uploaded successfully",
+      message: "تم رفع المستندات بنجاح",
       files: uploadedFiles,
     });
   } catch (error) {
     console.log("uploadMembershipDocument error:", error);
     return res
       .status(500)
-      .json({ message: "Server error", error: error.message });
+      .json({ message: "حدث خطأ أثناء رفع المستندات", error: error.message });
   }
 };
 
@@ -406,7 +428,7 @@ export const getMembershipFees = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "Invalid request_id, must be numeric" });
+          .json({ message: "رقم الطلب يجب أن يكون رقمياً" });
       }
       where.membership_request_id = BigInt(idStr);
     }
@@ -415,8 +437,18 @@ export const getMembershipFees = async (req, res) => {
     res.json(serializeBigInt(fees));
   } catch (err) {
     console.error("getMembershipFees error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء جلب الرسوم", error: err.message });
   }
+};
+
+// دالة مساعدة لتحويل التاريخ إلى صيغة ISO-8601
+const parseDate = (dateStr) => {
+  if (!dateStr) return null;
+  // إذا كان التاريخ بصيغة YYYY-MM-DD نحوله إلى DateTime
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + "T00:00:00.000Z");
+  }
+  return new Date(dateStr);
 };
 
 // إنشاء سجل رسوم جديد
@@ -427,14 +459,14 @@ export const addMembershipFee = async (req, res) => {
     if (!membership_request_id) {
       return res
         .status(400)
-        .json({ error: "membership_request_id مطلوب" });
+        .json({ message: "رقم طلب الانتساب مطلوب" });
     }
 
     const idStr = String(membership_request_id);
     if (!/^\d+$/.test(idStr)) {
       return res
         .status(400)
-        .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+        .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
     }
 
     const requestId = BigInt(idStr);
@@ -447,20 +479,32 @@ export const addMembershipFee = async (req, res) => {
     if (!request) {
       return res
         .status(400)
-        .json({ error: "طلب الانتساب غير موجود في قاعدة البيانات" });
+        .json({ message: "طلب الانتساب غير موجود" });
+    }
+
+    // تحويل حقول التاريخ
+    const data = { ...rest };
+    if (data.receipt_branch_fee_date) {
+      data.receipt_branch_fee_date = parseDate(data.receipt_branch_fee_date);
+    }
+    if (data.receipt_death_aid_date) {
+      data.receipt_death_aid_date = parseDate(data.receipt_death_aid_date);
+    }
+    if (data.receipt_retirement_date) {
+      data.receipt_retirement_date = parseDate(data.receipt_retirement_date);
     }
 
     const fee = await prisma.membership_fees.create({
       data: {
         membership_request_id: requestId,
-        ...rest,
+        ...data,
       },
     });
 
-    res.json(serializeBigInt(fee));
+    res.json({ message: "تم إضافة سجل الرسوم بنجاح", data: serializeBigInt(fee) });
   } catch (err) {
     console.error("addMembershipFee error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء إضافة الرسوم", error: err.message });
   }
 };
 
@@ -476,9 +520,20 @@ export const updateMembershipFee = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+          .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
       }
       rawData.membership_request_id = BigInt(idStr);
+    }
+
+    // تحويل حقول التاريخ
+    if (rawData.receipt_branch_fee_date) {
+      rawData.receipt_branch_fee_date = parseDate(rawData.receipt_branch_fee_date);
+    }
+    if (rawData.receipt_death_aid_date) {
+      rawData.receipt_death_aid_date = parseDate(rawData.receipt_death_aid_date);
+    }
+    if (rawData.receipt_retirement_date) {
+      rawData.receipt_retirement_date = parseDate(rawData.receipt_retirement_date);
     }
 
     const updated = await prisma.membership_fees.update({
@@ -486,10 +541,10 @@ export const updateMembershipFee = async (req, res) => {
       data: rawData,
     });
 
-    res.json(serializeBigInt(updated));
+    res.json({ message: "تم تعديل سجل الرسوم بنجاح", data: serializeBigInt(updated) });
   } catch (err) {
     console.error("updateMembershipFee error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء تعديل الرسوم", error: err.message });
   }
 };
 
@@ -498,10 +553,10 @@ export const deleteMembershipFee = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.membership_fees.delete({ where: { id: BigInt(id) } });
-    res.json({ message: "Deleted successfully" });
+    res.json({ message: "تم حذف سجل الرسوم بنجاح" });
   } catch (err) {
     console.error("deleteMembershipFee error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء حذف الرسوم", error: err.message });
   }
 };
 
@@ -518,7 +573,7 @@ export const getDeathAidForms = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "Invalid request_id, must be numeric" });
+          .json({ message: "رقم الطلب يجب أن يكون رقمياً" });
       }
       where.membership_request_id = BigInt(idStr);
     }
@@ -527,7 +582,7 @@ export const getDeathAidForms = async (req, res) => {
     res.json(serializeBigInt(forms));
   } catch (err) {
     console.error("getDeathAidForms error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء جلب استمارات الإعانة", error: err.message });
   }
 };
 
@@ -538,14 +593,14 @@ export const addDeathAidForm = async (req, res) => {
     if (!membership_request_id) {
       return res
         .status(400)
-        .json({ error: "membership_request_id مطلوب" });
+        .json({ message: "رقم طلب الانتساب مطلوب" });
     }
 
     const idStr = String(membership_request_id);
     if (!/^\d+$/.test(idStr)) {
       return res
         .status(400)
-        .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+        .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
     }
 
     const requestId = BigInt(idStr);
@@ -558,7 +613,7 @@ export const addDeathAidForm = async (req, res) => {
     if (!request) {
       return res
         .status(400)
-        .json({ error: "طلب الانتساب غير موجود في قاعدة البيانات" });
+        .json({ message: "طلب الانتساب غير موجود" });
     }
 
     const form = await prisma.death_aid_forms.create({
@@ -568,10 +623,10 @@ export const addDeathAidForm = async (req, res) => {
       },
     });
 
-    res.json(serializeBigInt(form));
+    res.json({ message: "تم إضافة استمارة الإعانة بنجاح", data: serializeBigInt(form) });
   } catch (err) {
     console.error("addDeathAidForm error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء إضافة استمارة الإعانة", error: err.message });
   }
 };
 
@@ -585,7 +640,7 @@ export const updateDeathAidForm = async (req, res) => {
       if (!/^\d+$/.test(idStr)) {
         return res
           .status(400)
-          .json({ error: "membership_request_id يجب أن يكون رقمياً" });
+          .json({ message: "رقم طلب الانتساب يجب أن يكون رقمياً" });
       }
       rawData.membership_request_id = BigInt(idStr);
     }
@@ -594,10 +649,10 @@ export const updateDeathAidForm = async (req, res) => {
       where: { id: BigInt(id) },
       data: rawData,
     });
-    res.json(serializeBigInt(updated));
+    res.json({ message: "تم تعديل استمارة الإعانة بنجاح", data: serializeBigInt(updated) });
   } catch (err) {
     console.error("updateDeathAidForm error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء تعديل استمارة الإعانة", error: err.message });
   }
 };
 
@@ -605,9 +660,9 @@ export const deleteDeathAidForm = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.death_aid_forms.delete({ where: { id: BigInt(id) } });
-    res.json({ message: "Deleted successfully" });
+    res.json({ message: "تم حذف استمارة الإعانة بنجاح" });
   } catch (err) {
     console.error("deleteDeathAidForm error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء حذف استمارة الإعانة", error: err.message });
   }
 };

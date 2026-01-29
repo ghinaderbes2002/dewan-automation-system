@@ -54,9 +54,6 @@ export const registerEngineer = async (req, res) => {
     // تشفير كلمة المرور
     const password_hash = await bcrypt.hash(password, 10);
 
-    // إنشاء username من البريد الإلكتروني
-    const username = email.split("@")[0] + "_" + Date.now();
-
     // إنشاء المهندس
     const engineer = await prisma.engineers.create({
       data: {
@@ -64,7 +61,6 @@ export const registerEngineer = async (req, res) => {
         email,
         mobile,
         national_id_number,
-        username,
         password_hash,
         is_active: true,
         is_registered: false // لسه ما مسجل بالنقابة
@@ -75,7 +71,7 @@ export const registerEngineer = async (req, res) => {
     const token = jwt.sign(
       {
         id: Number(engineer.id),
-        username: engineer.username,
+        email: engineer.email,
         userType: "engineer"
       },
       process.env.JWT_SECRET,
@@ -130,11 +126,10 @@ export const loginEngineer = async (req, res) => {
       });
     }
 
-    // البحث عن المهندس (يمكن الدخول بـ username أو email أو mobile)
+    // البحث عن المهندس (يمكن الدخول بـ email أو mobile)
     const engineer = await prisma.engineers.findFirst({
       where: {
         OR: [
-          { username: username },
           { email: username },
           { mobile: username }
         ]
@@ -166,7 +161,7 @@ export const loginEngineer = async (req, res) => {
     const token = jwt.sign(
       {
         id: Number(engineer.id),
-        username: engineer.username,
+        email: engineer.email,
         userType: "engineer"
       },
       process.env.JWT_SECRET,
