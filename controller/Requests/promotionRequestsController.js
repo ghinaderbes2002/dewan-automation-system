@@ -6,18 +6,34 @@ import { promotionDocumentTypesMap } from "../../utils/documentTypes.js";
 
 // Helper لتحويل BigInt
 const serializeBigInt = (obj) => {
-  if (!obj) return obj;
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") return obj.toString();
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj.constructor && obj.constructor.name === "Decimal") return obj.toString();
   if (Array.isArray(obj)) return obj.map(serializeBigInt);
+
   if (typeof obj === "object") {
     const newObj = {};
     for (const key in obj) {
-      if (typeof obj[key] === "bigint") newObj[key] = obj[key].toString();
-      else if (typeof obj[key] === "object")
-        newObj[key] = serializeBigInt(obj[key]);
-      else newObj[key] = obj[key];
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (typeof value === "bigint") {
+          newObj[key] = value.toString();
+        } else if (value instanceof Date) {
+          newObj[key] = value.toISOString();
+        } else if (value && value.constructor && value.constructor.name === "Decimal") {
+          newObj[key] = value.toString();
+        } else if (typeof value === "object" && value !== null) {
+          newObj[key] = serializeBigInt(value);
+        } else {
+          newObj[key] = value;
+        }
+      }
     }
     return newObj;
   }
+
   return obj;
 };
 

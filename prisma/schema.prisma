@@ -33,7 +33,6 @@ model engineers {
   address              String?
 
   // حقول المصادقة - للمهندسين اللي بدهم يسجلوا دخول
-  username             String?  @unique
   password_hash        String?
   is_active            Boolean  @default(true)
   is_registered        Boolean  @default(false) // هل مسجل بالنقابة؟
