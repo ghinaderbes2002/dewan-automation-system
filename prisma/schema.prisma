@@ -198,6 +198,8 @@ model membership_requests {
   study_date                   DateTime?
   study_employee_id            Int?
 
+  audit_notes                  String?  // ملاحظات التدقيق الموحدة
+
   branch_decision_number         String?
   branch_decision_date           DateTime?
   branch_decision_department     String?
@@ -352,6 +354,8 @@ model training_requests {
   training_size                  String?
   office_division_decision_summary String?
 
+  audit_notes String?  // ملاحظات التدقيق الموحدة
+
   status     String? @default("waiting_office")
   created_at DateTime @default(now())
   updated_at DateTime @default(now())
@@ -387,6 +391,8 @@ model office_opening_requests {
   office_division_decision_date DateTime?
 
   resulting_office_id BigInt?
+
+  audit_notes String?  // ملاحظات التدقيق الموحدة
 
   status     String? @default("under_review")
   created_at DateTime @default(now())
@@ -440,6 +446,8 @@ model promotion_requests {
   promotion_fee_amount Decimal?
   promotion_fee_receipt_no String?
   promotion_fee_receipt_date DateTime?
+
+  audit_notes String?  // ملاحظات التدقيق الموحدة
 
   status     String? @default("under_review")
   created_at DateTime @default(now())

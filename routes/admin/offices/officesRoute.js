@@ -13,7 +13,7 @@ const router = express.Router();
 router.post("/", auth, allowRoles("ADMIN"), createOffice);
 
 // جلب كل المكاتب
-router.get("/", auth, allowRoles("ADMIN"), getOffices);
+router.get("/", auth, getOffices);
 
 // تعديل مكتب
 router.patch("/:id", auth, allowRoles("ADMIN"), updateOffice);

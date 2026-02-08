@@ -47,9 +47,35 @@ export const getMembershipRequests = async (req, res) => {
         membership_fees: true,
         death_aid_forms: true,
         engineers: true,
+        studied_by: true,    // معلومات موظف التدقيق اللي كتب الملاحظة
+        received_by: true,   // معلومات موظف الاستقبال
       },
     });
-    res.json(serializeBigInt(requests));
+
+    // جلب المرفقات لكل طلب
+    const requestsWithAttachments = await Promise.all(
+      requests.map(async (request) => {
+        const attachments = await prisma.attachments.findMany({
+          where: {
+            request_type: "membership",
+            request_id: request.id
+          },
+          include: {
+            diwan_employees: true
+          },
+          orderBy: {
+            uploaded_at: "desc"
+          }
+        });
+
+        return {
+          ...request,
+          attachments: attachments
+        };
+      })
+    );
+
+    res.json(serializeBigInt(requestsWithAttachments));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -66,9 +92,32 @@ export const getMembershipRequestById = async (req, res) => {
         membership_fees: true,
         death_aid_forms: true,
         engineers: true,
+        studied_by: true,    // معلومات موظف التدقيق اللي كتب الملاحظة
+        received_by: true,   // معلومات موظف الاستقبال
       },
     });
-    res.json(serializeBigInt(request));
+
+    // جلب المرفقات من جدول attachments
+    const attachments = await prisma.attachments.findMany({
+      where: {
+        request_type: "membership",
+        request_id: BigInt(id)
+      },
+      include: {
+        diwan_employees: true  // معلومات الموظف اللي رفع الملف
+      },
+      orderBy: {
+        uploaded_at: "desc"
+      }
+    });
+
+    // إضافة المرفقات للطلب
+    const requestWithAttachments = {
+      ...request,
+      attachments: attachments
+    };
+
+    res.json(serializeBigInt(requestWithAttachments));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -20,28 +20,28 @@ export const getPendingRequestsByType = async (req, res) => {
     switch (type) {
       case "membership":
         requests = await prisma.membership_requests.findMany({
-          where: { status: "draft" },
+          where: { status: "under_review" },  // ✅ موحدة: قيد المراجعة
           include: { engineers: true, membership_documents: true },
         });
         break;
 
       case "training":
         requests = await prisma.training_requests.findMany({
-          where: { status: "waiting_office" },
+          where: { status: "under_review" },  // ✅ موحدة: قيد المراجعة
           include: { engineers: true, engineering_offices: true },
         });
         break;
 
       case "office_opening":
         requests = await prisma.office_opening_requests.findMany({
-          where: { status: "under_review" },
+          where: { status: "under_review" },  // ✅ موحدة: قيد المراجعة
           include: { engineers: true, engineering_offices: true },
         });
         break;
 
       case "promotion":
         requests = await prisma.promotion_requests.findMany({
-          where: { status: "under_review" },
+          where: { status: "under_review" },  // ✅ موحدة: قيد المراجعة
           include: { engineers: true },
         });
         break;
@@ -64,6 +64,7 @@ export const getRequestByIdAndType = async (req, res) => {
 
   try {
     let request;
+    let attachments = [];
 
     switch (type) {
       case "membership":
@@ -71,6 +72,22 @@ export const getRequestByIdAndType = async (req, res) => {
           where: { id: BigInt(id) },
           include: { engineers: true, membership_documents: true },
         });
+
+        // ✅ جلب المرفقات للانتساب
+        if (request) {
+          attachments = await prisma.attachments.findMany({
+            where: {
+              request_type: "membership",  // ✅ أحرف صغيرة
+              request_id: BigInt(id)
+            },
+            include: {
+              diwan_employees: true  // معلومات من رفع الملف
+            },
+            orderBy: {
+              uploaded_at: "desc"
+            }
+          });
+        }
         break;
 
       case "training":
@@ -100,7 +117,13 @@ export const getRequestByIdAndType = async (req, res) => {
 
     if (!request) return res.status(404).json({ message: "Request not found" });
 
-    res.json(convertBigIntToString(request));
+    // ✅ دمج المرفقات مع الطلب
+    const result = {
+      ...request,
+      attachments: attachments
+    };
+
+    res.json(convertBigIntToString(result));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });

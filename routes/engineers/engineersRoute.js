@@ -2,14 +2,17 @@ import express from "express";
 import {
   registerEngineer,
   loginEngineer,
+  getAllEngineers,
   getMyProfile,
   submitMembershipRequest,
   submitTrainingRequest,
   submitOfficeOpeningRequest,
   submitPromotionRequest,
-  getMyRequests
+  getMyRequests,
+  uploadMyMembershipDocuments
 } from "../../controller/engineers/engineersController.js";
 import { authEngineer } from "../../middlewares/authEngineer.js";
+import { uploadMembershipFields } from "../../middlewares/upload.js";
 
 const router = express.Router();
 
@@ -28,6 +31,12 @@ router.post("/register", registerEngineer);
  * POST /api/engineers/login
  */
 router.post("/login", loginEngineer);
+
+/**
+ * جلب جميع المهندسين (بدون حماية)
+ * GET /api/engineers
+ */
+router.get("/", getAllEngineers);
 
 // ==========================================
 // المسارات المحمية (تحتاج مصادقة)
@@ -72,5 +81,16 @@ router.post("/requests/office-opening", authEngineer, submitOfficeOpeningRequest
  * POST /api/engineers/requests/promotion
  */
 router.post("/requests/promotion", authEngineer, submitPromotionRequest);
+
+/**
+ * رفع مرفقات طلب الانتساب (للمهندس فقط - لطلبه الخاص)
+ * POST /api/engineers/requests/membership/upload
+ */
+router.post(
+  "/requests/membership/upload",
+  authEngineer,
+  uploadMembershipFields,
+  uploadMyMembershipDocuments
+);
 
 export default router;

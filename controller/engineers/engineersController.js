@@ -188,6 +188,36 @@ export const loginEngineer = async (req, res) => {
 };
 
 /**
+ * جلب جميع المهندسين (بدون حماية)
+ * GET /api/engineers
+ */
+export const getAllEngineers = async (req, res) => {
+  try {
+    const engineers = await prisma.engineers.findMany({
+      select: {
+        id: true,
+        full_name_ar: true,
+        full_name_en: true,
+        email: true,
+        mobile: true,
+        phone: true,
+        is_registered: true,
+        is_active: true,
+        created_at: true
+      },
+      orderBy: { created_at: "desc" }
+    });
+
+    res.json(serializeBigInt(engineers));
+  } catch (error) {
+    console.error("خطأ في جلب المهندسين:", error);
+    res.status(500).json({
+      message: "حدث خطأ في جلب المهندسين"
+    });
+  }
+};
+
+/**
  * جلب معلومات المهندس الحالي
  * GET /api/engineers/me
  */
@@ -602,6 +632,99 @@ export const getMyRequests = async (req, res) => {
     console.error("خطأ في جلب الطلبات:", error);
     res.status(500).json({
       message: "حدث خطأ في جلب الطلبات"
+    });
+  }
+};
+
+/**
+ * رفع مرفقات طلب الانتساب (للمهندس فقط - لطلبه الخاص)
+ * POST /api/engineers/requests/membership/upload
+ */
+export const uploadMyMembershipDocuments = async (req, res) => {
+  try {
+    const engineerId = BigInt(req.engineer.id);
+    const { membershipRequestId } = req.body;
+
+    // التحقق من وجود رقم الطلب
+    if (!membershipRequestId) {
+      return res.status(400).json({
+        message: "رقم طلب الانتساب مطلوب"
+      });
+    }
+
+    const requestId = BigInt(membershipRequestId);
+
+    // التحقق من وجود الطلب وأنه يخص المهندس
+    const request = await prisma.membership_requests.findUnique({
+      where: { id: requestId }
+    });
+
+    if (!request) {
+      return res.status(404).json({
+        message: "طلب الانتساب غير موجود"
+      });
+    }
+
+    // التحقق أن الطلب يخص المهندس الحالي
+    if (request.engineer_id && request.engineer_id !== engineerId) {
+      return res.status(403).json({
+        message: "ليس لديك صلاحية رفع مرفقات لهذا الطلب"
+      });
+    }
+
+    // التحقق من وجود ملفات
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({
+        message: "لم يتم رفع أي ملفات"
+      });
+    }
+
+    // استيراد documentTypesMap
+    const { documentTypesMap } = await import("../../utils/documentTypes.js");
+
+    const uploadedFiles = [];
+
+    // معالجة كل ملف
+    for (const fieldName of Object.keys(req.files)) {
+      const file = req.files[fieldName][0];
+      const documentType = documentTypesMap[fieldName];
+
+      // حفظ الملف في جدول attachments
+      await prisma.attachments.create({
+        data: {
+          request_type: "membership",  // ✅ أحرف صغيرة
+          request_id: Number(requestId),
+          document_type: documentType,
+          file_path: `/uploads/membership/${file.filename}`,
+          uploaded_by_employee_id: null  // المهندس رفعه، مش موظف
+        }
+      });
+
+      // تحديث جدول membership_documents
+      if (fieldName.startsWith("doc_")) {
+        await prisma.membership_documents.updateMany({
+          where: { membership_request_id: requestId },
+          data: { [fieldName]: true }
+        });
+      }
+
+      uploadedFiles.push({
+        field: fieldName,
+        document_type: documentType,
+        file_path: `/uploads/membership/${file.filename}`
+      });
+    }
+
+    res.json({
+      message: "تم رفع المستندات بنجاح",
+      files: uploadedFiles
+    });
+
+  } catch (error) {
+    console.error("خطأ في رفع مرفقات طلب الانتساب:", error);
+    res.status(500).json({
+      message: "حدث خطأ في رفع المستندات",
+      error: error.message
     });
   }
 };

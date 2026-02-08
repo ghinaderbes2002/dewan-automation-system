@@ -109,6 +109,7 @@ export const updateOfficeOpeningRequest = async (req, res) => {
           ? new Date(data.law_declaration_date)
           : undefined,
         law_declaration_home_address: data.law_declaration_home_address,
+        audit_notes: data.audit_notes,  // ملاحظات التدقيق
         status: data.status,
       },
     });
@@ -133,6 +134,7 @@ export const approveOfficeRequest = async (req, res) => {
         resulting_office_id: data.resulting_office_id
           ? BigInt(data.resulting_office_id)
           : undefined,
+        audit_notes: data.audit_notes,  // ملاحظات التدقيق
         status: data.status || "under_review",
       },
     });

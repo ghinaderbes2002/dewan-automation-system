@@ -90,18 +90,24 @@ export const createPromotionRequest = async (req, res) => {
       promotion_experiences,
     } = req.body;
 
+    // تحويل التواريخ في المؤهلات إلى DateTime
+    const qualificationsWithDateTime = (promotion_qualifications || []).map(q => ({
+      ...q,
+      obtained_date: q.obtained_date ? new Date(q.obtained_date) : null,
+    }));
+
     const data = {
       engineer_id: BigInt(engineer_id),
       target_rank,
       register_number,
-      request_date,
+      request_date: request_date ? new Date(request_date) : null,
       specialization,
       work_address,
       residence_address,
       phone,
       status,
       promotion_qualifications: {
-        create: promotion_qualifications || [],
+        create: qualificationsWithDateTime,
       },
       promotion_experiences: {
         create: promotion_experiences || [],
@@ -160,6 +166,7 @@ export const updatePromotionRequest = async (req, res) => {
      promotion_fee_amount,
      promotion_fee_receipt_no,
      promotion_fee_receipt_date,
+     audit_notes,  // ملاحظات التدقيق الموحدة
    } = req.body;
 
 
@@ -170,7 +177,7 @@ export const updatePromotionRequest = async (req, res) => {
      engineer_id: engineer_id ? BigInt(engineer_id) : undefined,
      target_rank,
      register_number,
-     request_date,
+     request_date: request_date ? new Date(request_date) : undefined,
      specialization,
      work_address,
      residence_address,
@@ -179,25 +186,26 @@ export const updatePromotionRequest = async (req, res) => {
 
      // هاد الحقول الإضافية
      membership_accept_decision_no,
-     membership_accept_decision_date,
+     membership_accept_decision_date: membership_accept_decision_date ? new Date(membership_accept_decision_date) : undefined,
      membership_accept_branch,
      last_modification_decision_no,
-     last_modification_decision_date,
+     last_modification_decision_date: last_modification_decision_date ? new Date(last_modification_decision_date) : undefined,
      last_modification_branch,
      practice_summary_a,
      practice_summary_b,
-     theoretical_entitlement_date,
+     theoretical_entitlement_date: theoretical_entitlement_date ? new Date(theoretical_entitlement_date) : undefined,
      half_delay_period_months,
-     entitlement_date,
+     entitlement_date: entitlement_date ? new Date(entitlement_date) : undefined,
      first_committee_notes,
      second_committee_notes,
      administrative_opinion,
      branch_council_decision,
-     branch_council_decision_date,
-     promotion_effective_date,
+     branch_council_decision_date: branch_council_decision_date ? new Date(branch_council_decision_date) : undefined,
+     promotion_effective_date: promotion_effective_date ? new Date(promotion_effective_date) : undefined,
      promotion_fee_amount,
      promotion_fee_receipt_no,
-     promotion_fee_receipt_date,
+     promotion_fee_receipt_date: promotion_fee_receipt_date ? new Date(promotion_fee_receipt_date) : undefined,
+     audit_notes,  // ملاحظات التدقيق الموحدة
    },
  });
 
@@ -211,7 +219,7 @@ export const updatePromotionRequest = async (req, res) => {
         data: promotion_qualifications.map((q) => ({
           promotion_request_id: BigInt(id),
           degree_name: q.degree_name,
-          obtained_date: q.obtained_date,
+          obtained_date: q.obtained_date ? new Date(q.obtained_date) : null,
           specialization: q.specialization,
           university_and_faculty: q.university_and_faculty,
         })),

@@ -56,7 +56,27 @@ export const getTrainingRequestById = async (req, res) => {
       include: { engineers: true, engineering_offices: true },
     });
     if (!request) return res.status(404).json({ error: "Request not found" });
-    res.json(serializeBigInt(request));
+
+    // جلب المرفقات
+    const attachments = await prisma.attachments.findMany({
+      where: {
+        request_type: "TRAINING",
+        request_id: BigInt(id)
+      },
+      include: {
+        diwan_employees: true
+      },
+      orderBy: {
+        uploaded_at: "desc"
+      }
+    });
+
+    const requestWithAttachments = {
+      ...request,
+      attachments: attachments
+    };
+
+    res.json(serializeBigInt(requestWithAttachments));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

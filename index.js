@@ -20,6 +20,9 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// ✅ جعل مجلد uploads عام (static) للوصول للمرفقات
+app.use('/uploads', express.static('uploads'));
+
 app.use("/auth", authRoute); // مثال: /auth/login و /auth/me
 app.use("/employees", employeesRoute);
 app.use("/Requests", RequestsRoute);
