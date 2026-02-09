@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dewan_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "2025$$SecureChangeThis"
+      POSTGRES_DB: dewan
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    container_name: dewan_app
+    restart: always
+    ports:
+      - "3013:3013"
+    env_file:
+      - .env.production
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  uploads_data:
