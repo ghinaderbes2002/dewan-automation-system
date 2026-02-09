@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "2025$$SecureChangeThis"
+      POSTGRES_PASSWORD: "2025$$Secure"
       POSTGRES_DB: dewan
     volumes:
       - postgres_data:/var/lib/postgresql/data
