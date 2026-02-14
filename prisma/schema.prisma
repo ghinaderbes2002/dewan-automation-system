@@ -36,6 +36,7 @@ model engineers {
   password_hash        String?
   is_active            Boolean  @default(true)
   is_registered        Boolean  @default(false) // هل مسجل بالنقابة؟
+  syndicate_number     String?  @unique         // الرقم النقابي (يتولد تلقائياً بعد الانتساب)
 
   created_at           DateTime @default(now())
   updated_at           DateTime @default(now())

@@ -160,6 +160,35 @@ export const deleteMembershipRequest = async (req, res) => {
   }
 };
 
+// دالة لتوليد رقم نقابي تلقائي
+const generateSyndicateNumber = async () => {
+  const currentYear = new Date().getFullYear();
+
+  // جلب آخر رقم نقابي تم توليده هذه السنة
+  const lastEngineer = await prisma.engineers.findFirst({
+    where: {
+      syndicate_number: {
+        startsWith: `SYN-${currentYear}-`
+      }
+    },
+    orderBy: {
+      syndicate_number: 'desc'
+    }
+  });
+
+  let nextNumber = 1;
+  if (lastEngineer && lastEngineer.syndicate_number) {
+    // استخراج الرقم من الصيغة SYN-2026-0001
+    const parts = lastEngineer.syndicate_number.split('-');
+    const lastNumber = parseInt(parts[2]);
+    nextNumber = lastNumber + 1;
+  }
+
+  // تنسيق الرقم بصيغة 4 خانات (0001, 0002, ...)
+  const formattedNumber = String(nextNumber).padStart(4, '0');
+  return `SYN-${currentYear}-${formattedNumber}`;
+};
+
 // اعتماد الطلب وتحويله لسجل مهندس
 export const approveMembershipRequest = async (req, res) => {
   const { id } = req.params;
@@ -168,6 +197,9 @@ export const approveMembershipRequest = async (req, res) => {
       where: { id: BigInt(id) },
     });
     if (!request) return res.status(404).json({ message: "طلب الانتساب غير موجود" });
+
+    // توليد رقم نقابي جديد
+    const syndicateNumber = await generateSyndicateNumber();
 
     // التحقق إذا الطلب مربوط بمهندس موجود (قدمه المهندس بنفسه)
     let engineer;
@@ -181,6 +213,7 @@ export const approveMembershipRequest = async (req, res) => {
 
       const updateData = {
         is_registered: true, // المهندس صار مسجل بالنقابة
+        syndicate_number: syndicateNumber, // الرقم النقابي الجديد
         full_name_ar: request.full_name_ar || existingEngineer.full_name_ar,
         birth_date: request.birth_date || existingEngineer.birth_date,
         birth_place: request.birth_place || existingEngineer.birth_place,
@@ -233,6 +266,7 @@ export const approveMembershipRequest = async (req, res) => {
           email: request.email,
           address: request.home_address,
           is_registered: true, // مسجل بالنقابة
+          syndicate_number: syndicateNumber, // الرقم النقابي
         },
       });
     }
@@ -242,6 +276,7 @@ export const approveMembershipRequest = async (req, res) => {
       data: {
         status: "approved",
         engineer_id: engineer.id,
+        syndicate_registration_number: syndicateNumber, // حفظ الرقم النقابي في طلب الانتساب كمان
       },
     });
 
