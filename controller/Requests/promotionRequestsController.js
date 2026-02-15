@@ -270,23 +270,46 @@ export const deletePromotionRequest = async (req, res) => {
 
 export const uploadPromotionDocuments = async (req, res) => {
   try {
-    const { promotionRequestId } = req.body;
+    // دعم أسماء حقول مختلفة من الفرونت (body أو query)
+    const promotionRequestId =
+      req.body.promotionRequestId ||
+      req.body.promotion_request_id ||
+      req.body.requestId ||
+      req.body.id ||
+      req.query.promotionRequestId ||
+      req.query.promotion_request_id ||
+      req.query.id;
     const employeeId = req.user.id;
 
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).json({ message: "No files uploaded" });
+    if (!promotionRequestId) {
+      return res.status(400).json({
+        message: "رقم طلب الترقية مطلوب. أرسله في body أو query parameter",
+        hint: "FormData.append('promotionRequestId', id) أو ?promotionRequestId=123"
+      });
+    }
+
+    const idStr = String(promotionRequestId).trim();
+    if (!/^\d+$/.test(idStr)) {
+      return res.status(400).json({ message: "رقم طلب الترقية يجب أن يكون رقمياً" });
+    }
+
+    const requestId = BigInt(idStr);
+
+    // upload.any() يرجع array مش object
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "لم يتم رفع أي ملفات" });
     }
 
     const uploadedFiles = [];
 
-    for (const fieldName of Object.keys(req.files)) {
-      const file = req.files[fieldName][0];
-      const documentType = promotionDocumentTypesMap[fieldName];
+    for (const file of req.files) {
+      const fieldName = file.fieldname;
+      const documentType = promotionDocumentTypesMap[fieldName] || fieldName;
 
       await prisma.attachments.create({
         data: {
-          request_type: "PROMOTION",
-          request_id: Number(promotionRequestId),
+          request_type: "promotion",
+          request_id: requestId,
           document_type: documentType,
           file_path: `/uploads/promotion/${file.filename}`,
           uploaded_by_employee_id: employeeId,
@@ -300,9 +323,9 @@ export const uploadPromotionDocuments = async (req, res) => {
       });
     }
 
-    res.json({ message: "Files uploaded successfully", files: uploadedFiles });
+    res.json({ message: "تم رفع المستندات بنجاح", files: uploadedFiles });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "حدث خطأ أثناء رفع المستندات", error: err.message });
   }
 };

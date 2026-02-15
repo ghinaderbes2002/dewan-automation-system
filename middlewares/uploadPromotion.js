@@ -1,6 +1,5 @@
 import multer from "multer";
 import path from "path";
-import { promotionDocumentTypesMap } from "../utils/documentTypes.js";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -14,9 +13,5 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-const fields = Object.keys(promotionDocumentTypesMap).map((key) => ({
-  name: key,
-  maxCount: 1,
-}));
-
-export const uploadPromotionFields = upload.fields(fields);
+// يقبل أي اسم حقل ملف من الفرونت إند
+export const uploadPromotionFields = upload.any();

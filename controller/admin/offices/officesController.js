@@ -49,10 +49,23 @@ export const createOffice = async (req, res) => {
   } = req.body;
 
   try {
+    // التحقق من صحة owner_engineer_id
+    let engineerId = null;
+    if (owner_engineer_id) {
+      const idStr = String(owner_engineer_id).trim();
+      if (!/^\d+$/.test(idStr)) {
+        return res.status(400).json({
+          message: "رقم المهندس يجب أن يكون رقمياً",
+          field: "owner_engineer_id"
+        });
+      }
+      engineerId = BigInt(idStr);
+    }
+
     const office = await prisma.engineering_offices.create({
       data: {
         office_name,
-        owner_engineer_id: owner_engineer_id ? BigInt(owner_engineer_id) : null,
+        owner_engineer_id: engineerId,
         office_type,
         specialization,
         address,
@@ -61,22 +74,32 @@ export const createOffice = async (req, res) => {
         license_issue_date: license_issue_date ? new Date(license_issue_date) : null,
         license_status,
       },
+      include: {
+        engineers: true  // إرجاع بيانات المهندس المالك مع المكتب
+      }
     });
     res.json({ message: "تم إنشاء المكتب", office: serializeBigInt(office) });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "حدث خطأ أثناء إنشاء المكتب" });
+    res.status(500).json({ message: "حدث خطأ أثناء إنشاء المكتب", error: err.message });
   }
 };
 
-// نفس الشيء لبقية الدوال:
+// جلب كل المكاتب مع بيانات المهندس المالك
 export const getOffices = async (req, res) => {
   try {
-    const offices = await prisma.engineering_offices.findMany();
+    const offices = await prisma.engineering_offices.findMany({
+      include: {
+        engineers: true  // جلب بيانات المهندس المالك
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
     res.json(serializeBigInt(offices));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "حدث خطأ أثناء جلب المكاتب" });
+    res.status(500).json({ message: "حدث خطأ أثناء جلب المكاتب", error: err.message });
   }
 };
 
@@ -84,18 +107,38 @@ export const updateOffice = async (req, res) => {
   const { id } = req.params;
   const data = req.body;
 
-  if (data.owner_engineer_id) data.owner_engineer_id = BigInt(data.owner_engineer_id);
-  if (data.license_issue_date) data.license_issue_date = new Date(data.license_issue_date);
-
   try {
+    // التحقق من صحة owner_engineer_id
+    if (data.owner_engineer_id !== undefined) {
+      if (data.owner_engineer_id === null || data.owner_engineer_id === "") {
+        data.owner_engineer_id = null;
+      } else {
+        const idStr = String(data.owner_engineer_id).trim();
+        if (!/^\d+$/.test(idStr)) {
+          return res.status(400).json({
+            message: "رقم المهندس يجب أن يكون رقمياً",
+            field: "owner_engineer_id"
+          });
+        }
+        data.owner_engineer_id = BigInt(idStr);
+      }
+    }
+
+    if (data.license_issue_date) {
+      data.license_issue_date = new Date(data.license_issue_date);
+    }
+
     const updatedOffice = await prisma.engineering_offices.update({
       where: { id: BigInt(id) },
       data,
+      include: {
+        engineers: true  // إرجاع بيانات المهندس المالك مع المكتب
+      }
     });
     res.json({ message: "تم تعديل المكتب", office: serializeBigInt(updatedOffice) });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "حدث خطأ أثناء تعديل المكتب" });
+    res.status(500).json({ message: "حدث خطأ أثناء تعديل المكتب", error: err.message });
   }
 };
 
