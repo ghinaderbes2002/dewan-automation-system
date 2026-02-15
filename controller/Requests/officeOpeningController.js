@@ -109,7 +109,7 @@ export const updateOfficeOpeningRequest = async (req, res) => {
           ? new Date(data.law_declaration_date)
           : undefined,
         law_declaration_home_address: data.law_declaration_home_address,
-        audit_notes: data.audit_notes,  // ملاحظات التدقيق
+        audit_notes: data.audit_notes,
         status: data.status,
       },
     });
@@ -124,6 +124,33 @@ export const approveOfficeRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
+
+    let resultingOfficeId = data.resulting_office_id
+      ? BigInt(data.resulting_office_id)
+      : undefined;
+
+    // عند الموافقة: إنشاء المكتب تلقائياً في جدول engineering_offices
+    if (data.status === "approved" && !data.resulting_office_id) {
+      const existingRequest = await prisma.office_opening_requests.findUnique({
+        where: { id: BigInt(id) },
+      });
+
+      if (existingRequest) {
+        const newOffice = await prisma.engineering_offices.create({
+          data: {
+            office_name: existingRequest.office_name || "مكتب جديد",
+            owner_engineer_id: existingRequest.engineer_id,
+            office_type: existingRequest.office_type,
+            specialization: existingRequest.specialization,
+            address: existingRequest.office_address,
+            phone: existingRequest.office_phone,
+            license_status: "active",
+          },
+        });
+        resultingOfficeId = newOffice.id;
+      }
+    }
+
     const updatedRequest = await prisma.office_opening_requests.update({
       where: { id: BigInt(id) },
       data: {
@@ -131,15 +158,14 @@ export const approveOfficeRequest = async (req, res) => {
         office_division_decision_date: data.office_division_decision_date
           ? new Date(data.office_division_decision_date)
           : undefined,
-        resulting_office_id: data.resulting_office_id
-          ? BigInt(data.resulting_office_id)
-          : undefined,
-        audit_notes: data.audit_notes,  // ملاحظات التدقيق
+        resulting_office_id: resultingOfficeId,
+        audit_notes: data.audit_notes,
         status: data.status || "under_review",
       },
     });
     res.json(serializeBigInt(updatedRequest));
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
