@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import { documentTypesMap } from "../../utils/documentTypes.js";
+import bcrypt from "bcryptjs";
 
 // دالة لتحويل كل BigInt إلى String و Date إلى ISO String و Decimal إلى String
 const serializeBigInt = (obj) => {
@@ -201,6 +202,9 @@ export const approveMembershipRequest = async (req, res) => {
     // توليد رقم نقابي جديد
     const syndicateNumber = await generateSyndicateNumber();
 
+    // تشفير كلمة السر الافتراضية
+    const defaultPassword = await bcrypt.hash("123456", 10);
+
     // التحقق إذا الطلب مربوط بمهندس موجود (قدمه المهندس بنفسه)
     let engineer;
 
@@ -214,6 +218,8 @@ export const approveMembershipRequest = async (req, res) => {
       const updateData = {
         is_registered: true, // المهندس صار مسجل بالنقابة
         syndicate_number: syndicateNumber, // الرقم النقابي الجديد
+        password_hash: defaultPassword, // كلمة السر الافتراضية
+        username: request.email || request.mobile || existingEngineer.email || existingEngineer.mobile,
         full_name_ar: request.full_name_ar || existingEngineer.full_name_ar,
         birth_date: request.birth_date || existingEngineer.birth_date,
         birth_place: request.birth_place || existingEngineer.birth_place,
@@ -267,6 +273,8 @@ export const approveMembershipRequest = async (req, res) => {
           address: request.home_address,
           is_registered: true, // مسجل بالنقابة
           syndicate_number: syndicateNumber, // الرقم النقابي
+          password_hash: defaultPassword, // كلمة السر الافتراضية
+          username: request.email || request.mobile, // اسم المستخدم
         },
       });
     }

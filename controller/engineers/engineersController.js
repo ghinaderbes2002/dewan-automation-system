@@ -263,6 +263,121 @@ export const getMyProfile = async (req, res) => {
 };
 
 /**
+ * تحديث معلومات المهندس الحالي
+ * PATCH /api/engineers/me
+ */
+export const updateMyProfile = async (req, res) => {
+  try {
+    const engineerId = BigInt(req.engineer.id);
+    const {
+      full_name_ar,
+      full_name_en,
+      email,
+      mobile,
+      phone,
+      address,
+      birth_date,
+      nationality,
+      password
+    } = req.body;
+
+    // التحقق من وجود المهندس
+    const existingEngineer = await prisma.engineers.findUnique({
+      where: { id: engineerId }
+    });
+
+    if (!existingEngineer) {
+      return res.status(404).json({
+        message: "المهندس غير موجود"
+      });
+    }
+
+    // التحقق من عدم تكرار البريد الإلكتروني أو رقم الهاتف
+    if (email || mobile) {
+      const duplicate = await prisma.engineers.findFirst({
+        where: {
+          AND: [
+            { id: { not: engineerId } },
+            {
+              OR: [
+                email ? { email } : {},
+                mobile ? { mobile } : {}
+              ]
+            }
+          ]
+        }
+      });
+
+      if (duplicate) {
+        return res.status(400).json({
+          message: "البريد الإلكتروني أو رقم الهاتف مستخدم من قبل مهندس آخر"
+        });
+      }
+    }
+
+    // تحضير البيانات المراد تحديثها
+    const updateData = {};
+    if (full_name_ar) updateData.full_name_ar = full_name_ar;
+    if (full_name_en) updateData.full_name_en = full_name_en;
+    if (email) updateData.email = email;
+    if (mobile) updateData.mobile = mobile;
+    if (phone) updateData.phone = phone;
+    if (address) updateData.address = address;
+    if (birth_date) updateData.birth_date = new Date(birth_date);
+    if (nationality) updateData.nationality = nationality;
+
+    // تشفير كلمة المرور الجديدة إذا تم إرسالها
+    if (password) {
+      updateData.password_hash = await bcrypt.hash(password, 10);
+    }
+
+    // تحديث بيانات المهندس
+    const updatedEngineer = await prisma.engineers.update({
+      where: { id: engineerId },
+      data: updateData,
+      select: {
+        id: true,
+        full_name_ar: true,
+        full_name_en: true,
+        national_id_number: true,
+        email: true,
+        mobile: true,
+        phone: true,
+        address: true,
+        birth_date: true,
+        nationality: true,
+        is_registered: true,
+        syndicate_number: true,
+        created_at: true
+      }
+    });
+
+    res.json({
+      message: "تم تحديث البيانات بنجاح",
+      engineer: serializeBigInt(updatedEngineer)
+    });
+  } catch (error) {
+    console.error("خطأ في تحديث البيانات:", error);
+
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0];
+      const arabicFieldNames = {
+        'mobile': 'رقم الموبايل',
+        'email': 'البريد الإلكتروني',
+        'national_id_number': 'الرقم الوطني'
+      };
+      return res.status(400).json({
+        message: `${arabicFieldNames[field] || field} مستخدم من قبل`
+      });
+    }
+
+    res.status(500).json({
+      message: "حدث خطأ في تحديث البيانات"
+    });
+  }
+};
+
+/**
  * تقديم طلب انتساب
  * POST /api/engineers/requests/membership
  */

@@ -4,6 +4,7 @@ import {
   loginEngineer,
   getAllEngineers,
   getMyProfile,
+  updateMyProfile,
   submitMembershipRequest,
   submitTrainingRequest,
   submitOfficeOpeningRequest,
@@ -47,6 +48,12 @@ router.get("/", getAllEngineers);
  * GET /api/engineers/me
  */
 router.get("/me", authEngineer, getMyProfile);
+
+/**
+ * تحديث معلومات المهندس الحالي
+ * PATCH /api/engineers/me
+ */
+router.patch("/me", authEngineer, updateMyProfile);
 
 /**
  * جلب جميع طلبات المهندس
