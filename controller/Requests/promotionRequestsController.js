@@ -279,7 +279,8 @@ export const uploadPromotionDocuments = async (req, res) => {
       req.query.promotionRequestId ||
       req.query.promotion_request_id ||
       req.query.id;
-    const employeeId = req.user.id;
+    // إذا كان المرسِل موظفاً نحفظ id الموظف، وإذا كان مهندساً نحط null
+    const employeeId = req.user?.userType === "employee" ? req.user.id : null;
 
     if (!promotionRequestId) {
       return res.status(400).json({

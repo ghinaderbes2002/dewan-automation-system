@@ -86,7 +86,8 @@ export const registerEngineer = async (req, res) => {
         full_name_ar: engineer.full_name_ar,
         email: engineer.email,
         mobile: engineer.mobile,
-        is_registered: engineer.is_registered
+        is_registered: engineer.is_registered,
+        syndicate_number: engineer.syndicate_number
       }
     });
   } catch (error) {
@@ -176,7 +177,8 @@ export const loginEngineer = async (req, res) => {
         full_name_ar: engineer.full_name_ar,
         email: engineer.email,
         mobile: engineer.mobile,
-        is_registered: engineer.is_registered
+        is_registered: engineer.is_registered,
+        syndicate_number: engineer.syndicate_number
       }
     });
   } catch (error) {
@@ -203,6 +205,7 @@ export const getAllEngineers = async (req, res) => {
         phone: true,
         is_registered: true,
         is_active: true,
+        syndicate_number: true,
         created_at: true
       },
       orderBy: { created_at: "desc" }
@@ -239,6 +242,7 @@ export const getMyProfile = async (req, res) => {
         birth_date: true,
         nationality: true,
         is_registered: true,
+        syndicate_number: true,
         created_at: true
       }
     });
